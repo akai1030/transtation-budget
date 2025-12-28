@@ -27,34 +27,73 @@
             background-size: 40px 40px;
         }
         .font-mono { font-family: 'JetBrains Mono', monospace; }
+        
+        /* 面板風格 */
         .sheikah-panel {
-            background: rgba(255, 255, 255, 0.9);
+            background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(12px);
             border: 1px solid var(--glass-border);
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
             position: relative;
-            overflow: hidden;
         }
+        /* 角落裝飾 */
         .corner-deco::before, .corner-deco::after {
             content: ''; position: absolute; width: 10px; height: 10px;
             border: 1px solid var(--sheikah-orange); transition: all 0.3s ease;
         }
         .corner-deco::before { top: 0; left: 0; border-right: none; border-bottom: none; }
         .corner-deco::after { bottom: 0; right: 0; border-left: none; border-top: none; }
+        
+        /* 輸入框 */
         .sheikah-input {
-            background: transparent; border-bottom: 1px solid #CCC; border-radius: 0; transition: all 0.3s;
+            background: transparent;
+            border-bottom: 1px solid #CCC;
+            border-radius: 0;
+            transition: all 0.3s;
         }
-        .sheikah-input:focus { outline: none; border-bottom: 1px solid var(--sheikah-orange); background: rgba(255, 77, 0, 0.03); }
-        .btn-sheikah { border: 1px solid var(--sheikah-orange); color: var(--sheikah-orange); background: transparent; font-weight: 500; transition: all 0.2s; }
-        .btn-sheikah:hover { background: var(--sheikah-orange); color: white; }
+        .sheikah-input:focus {
+            outline: none;
+            border-bottom: 1px solid var(--sheikah-orange);
+            background: rgba(255, 77, 0, 0.03);
+        }
+        
+        /* 按鈕 */
+        .btn-sheikah {
+            border: 1px solid var(--sheikah-orange);
+            color: var(--sheikah-orange);
+            background: transparent;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .btn-sheikah:hover {
+            background: var(--sheikah-orange);
+            color: white;
+        }
+        
+        /* 頁籤 */
         .tab-btn { border-bottom: 2px solid transparent; opacity: 0.5; }
         .tab-btn.active { border-bottom: 2px solid var(--sheikah-orange); opacity: 1; color: var(--sheikah-orange); }
+        
+        /* 進度條 */
         .progress-container { background: #E5E7EB; border-radius: 99px; height: 6px; overflow: hidden; }
         .progress-bar { height: 100%; transition: width 0.5s ease; }
         
-        /* 旋轉動畫 (Refresh) */
+        /* 旋轉動畫 */
         .spin { animation: spin 1s linear infinite; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* Modal 彈窗樣式 */
+        .modal-mask {
+            position: fixed; inset: 0; z-index: 50;
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(4px);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .modal-card {
+            width: 90%; max-width: 500px;
+            max-height: 85vh; overflow-y: auto;
+            background: white;
+        }
     </style>
 </head>
 <body class="min-h-screen flex items-center justify-center p-4">
@@ -64,13 +103,13 @@
         <div class="mb-6 flex justify-between items-end">
             <div>
                 <h1 class="text-xs font-bold tracking-[0.2em] text-stone-400 mb-1">TranStation Lab</h1>
-                <h2 class="text-2xl font-light tracking-widest text-stone-800">BUDGET <span class="text-[#FF4D00]">OS v6</span></h2>
+                <h2 class="text-2xl font-light tracking-widest text-stone-800">BUDGET <span class="text-[#FF4D00]">OS v7</span></h2>
             </div>
             
             <div class="flex items-center space-x-3">
                 <div class="text-[10px] text-stone-400 font-mono flex items-center space-x-1">
                     <span v-if="loading" class="text-[#FF4D00]">SYNCING...</span>
-                    <span v-else>AUTO-REFRESH: {{ autoRefreshTimer }}s</span>
+                    <span v-else>REFRESH: {{ autoRefreshTimer }}s</span>
                 </div>
                 <button @click="forceRefresh" class="text-stone-400 hover:text-[#FF4D00] transition-colors" title="手動更新">
                     <svg :class="{spin: loading}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
@@ -80,15 +119,14 @@
             </div>
         </div>
 
-        <div class="sheikah-panel rounded-lg p-6 corner-deco min-h-[500px] relative">
+        <div class="sheikah-panel rounded-lg p-6 corner-deco min-h-[550px] relative">
             
-            <div v-if="!currentUser" class="absolute inset-0 z-50 bg-white/95 flex flex-col items-center justify-center p-8 backdrop-blur-sm">
+            <div v-if="!currentUser" class="absolute inset-0 z-40 bg-white/95 flex flex-col items-center justify-center p-8">
                 <div class="w-full max-w-xs space-y-6">
                     <div class="text-center">
                         <h3 class="text-xl font-bold text-stone-700 tracking-widest">IDENTITY VERIFY</h3>
                         <p class="text-xs text-stone-400 mt-1">請驗證操作人員身份</p>
                     </div>
-                    
                     <div class="space-y-4">
                         <div>
                             <label class="text-[10px] text-stone-400">OPERATOR</label>
@@ -102,7 +140,6 @@
                             <input type="password" v-model="loginForm.password" class="sheikah-input w-full py-2 text-sm font-mono tracking-widest">
                         </div>
                     </div>
-
                     <button @click="login" :disabled="isLoggingIn" class="w-full btn-sheikah py-3 text-sm tracking-widest">
                         {{ isLoggingIn ? 'VERIFYING...' : 'LOGIN' }}
                     </button>
@@ -125,24 +162,57 @@
 
                 <div v-if="currentTab === 'record'" class="space-y-6">
                     <div class="grid grid-cols-2 gap-6">
-                        <div><label class="text-[10px] text-stone-400">DATE</label><input type="date" v-model="form.date" class="sheikah-input w-full py-2 text-sm font-mono"></div>
+                        <div>
+                            <label class="text-[10px] text-stone-400">DATE</label>
+                            <input type="date" v-model="form.date" class="sheikah-input w-full py-2 text-sm font-mono">
+                        </div>
                         <div>
                             <label class="text-[10px] text-stone-400">PAYER</label>
-                            <select v-model="form.payer" class="sheikah-input w-full py-2 text-sm"><option v-for="u in users" :key="u.id" :value="u.name">{{ u.name }} (${{u.pettyCash}})</option></select>
+                            <select v-model="form.payer" class="sheikah-input w-full py-2 text-sm">
+                                <option v-for="u in users" :key="u.id" :value="u.name">{{ u.name }}</option>
+                            </select>
                         </div>
                     </div>
-                    <div>
-                        <div class="flex space-x-3 mt-2">
-                            <button @click="form.paymentType='零用金'" :class="form.paymentType==='零用金'?'bg-[#FF4D00] text-white':'text-stone-400 border border-stone-300'" class="flex-1 py-1 text-xs rounded">公款零用金</button>
-                            <button @click="form.paymentType='代墊'" :class="form.paymentType==='代墊'?'bg-[#FF4D00] text-white':'text-stone-400 border border-stone-300'" class="flex-1 py-1 text-xs rounded">個人代墊</button>
+                    
+                    <div class="space-y-2">
+                        <label class="text-[10px] text-stone-400 uppercase tracking-widest">PAYMENT SOURCE</label>
+                        <div class="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-2">
+                            <button @click="form.paymentType='零用金'" 
+                                :class="form.paymentType==='零用金' ? 'bg-[#FF4D00] text-white border-[#FF4D00]' : 'bg-white text-stone-500 border-stone-200 hover:border-[#FF4D00]'"
+                                class="flex-1 py-3 px-2 border rounded text-xs text-left relative transition-all group">
+                                <div class="font-bold flex items-center"><span class="mr-2">🌲</span>從我的公款扣</div>
+                                <div class="text-[10px] opacity-70 font-mono mt-1">目前餘額: ${{ getUserBalance(form.payer) }}</div>
+                                <div v-if="form.paymentType==='零用金'" class="absolute right-2 top-3 text-white">✔</div>
+                            </button>
+                            
+                            <button @click="form.paymentType='代墊'" 
+                                :class="form.paymentType==='代墊' ? 'bg-[#FF4D00] text-white border-[#FF4D00]' : 'bg-white text-stone-500 border-stone-200 hover:border-[#FF4D00]'"
+                                class="flex-1 py-3 px-2 border rounded text-xs text-left relative transition-all group">
+                                <div class="font-bold flex items-center"><span class="mr-2">🙋</span>我自己先墊款</div>
+                                <div class="text-[10px] opacity-70 font-mono mt-1">記在公司帳上</div>
+                                <div v-if="form.paymentType==='代墊'" class="absolute right-2 top-3 text-white">✔</div>
+                            </button>
                         </div>
                     </div>
+
                     <div class="pt-4 border-t border-dashed border-stone-200">
-                        <div class="flex justify-between items-center mb-4"><span class="text-xs font-bold text-stone-500">明細列表</span><span class="text-sm font-mono font-bold text-[#FF4D00]">Total: ${{ totalAmount }}</span></div>
+                        <div class="flex justify-between items-center mb-4">
+                            <span class="text-xs font-bold text-stone-500">明細列表</span>
+                            <span class="text-sm font-mono font-bold text-[#FF4D00]">Total: ${{ totalAmount }}</span>
+                        </div>
                         <div v-for="(item, index) in form.items" :key="index" class="mb-4 relative">
                             <button v-if="form.items.length>1" @click="removeItem(index)" type="button" class="absolute -left-5 top-2 text-red-400">×</button>
-                            <div class="flex space-x-2 mb-2"><select v-model="item.projectId" class="flex-[2] sheikah-input py-1 text-sm"><option disabled value="">專案...</option><option v-for="p in projects" :key="p.id" :value="p.id">{{ p.name }}</option></select><input type="number" v-model.number="item.amount" placeholder="$$" class="flex-1 sheikah-input py-1 text-sm text-right font-mono"></div>
-                            <div class="flex space-x-2"><input type="text" v-model="item.itemName" placeholder="品項" class="flex-[2] sheikah-input py-1 text-xs"><input type="text" v-model="item.note" placeholder="備註" class="flex-1 sheikah-input py-1 text-xs text-stone-400"></div>
+                            <div class="flex space-x-2 mb-2">
+                                <select v-model="item.projectId" class="flex-[2] sheikah-input py-1 text-sm">
+                                    <option disabled value="">專案...</option>
+                                    <option v-for="p in projects" :key="p.id" :value="p.id">{{ p.name }}</option>
+                                </select>
+                                <input type="number" v-model.number="item.amount" placeholder="$$" class="flex-1 sheikah-input py-1 text-sm text-right font-mono">
+                            </div>
+                            <div class="flex space-x-2">
+                                <input type="text" v-model="item.itemName" placeholder="品項" class="flex-[2] sheikah-input py-1 text-xs">
+                                <input type="text" v-model="item.note" placeholder="備註" class="flex-1 sheikah-input py-1 text-xs text-stone-400">
+                            </div>
                         </div>
                         <button @click="addItem" class="w-full py-2 border border-dashed border-stone-300 text-stone-400 text-xs hover:border-[#FF4D00] hover:text-[#FF4D00]">+ 新增明細</button>
                     </div>
@@ -157,39 +227,66 @@
                             <button @click="submitCreateProject" class="bg-stone-800 text-white px-4 py-1 text-xs rounded hover:bg-[#FF4D00]">建立</button>
                         </div>
                     </div>
+                    
                     <div class="bg-white/50 p-4 border border-stone-200 rounded-lg">
                         <div class="flex justify-between items-center mb-3">
                             <h3 class="text-xs font-bold text-[#FF4D00]">預算設定</h3>
-                            <div class="flex bg-stone-100 rounded p-0.5"><button @click="incomeMode='single'" :class="incomeMode==='single'?'bg-white shadow text-[#FF4D00]':'text-stone-400'" class="px-3 py-1 text-[10px] rounded">單筆</button><button @click="incomeMode='batch'" :class="incomeMode==='batch'?'bg-white shadow text-[#FF4D00]':'text-stone-400'" class="px-3 py-1 text-[10px] rounded">智慧擬定</button></div>
+                            <div class="flex bg-stone-100 rounded p-0.5">
+                                <button @click="incomeMode='single'" :class="incomeMode==='single'?'bg-white shadow text-[#FF4D00]':'text-stone-400'" class="px-3 py-1 text-[10px] rounded transition-all">單筆</button>
+                                <button @click="incomeMode='batch'" :class="incomeMode==='batch'?'bg-white shadow text-[#FF4D00]':'text-stone-400'" class="px-3 py-1 text-[10px] rounded transition-all">智慧擬定</button>
+                            </div>
                         </div>
-                        <select v-model="incomeProjectId" class="sheikah-input text-sm w-full mb-3"><option disabled value="">選擇目標專案...</option><option v-for="p in projects" :key="p.id" :value="p.id">{{ p.name }}</option></select>
+                        <select v-model="incomeProjectId" class="sheikah-input text-sm w-full mb-3">
+                            <option disabled value="">選擇目標專案...</option>
+                            <option v-for="p in projects" :key="p.id" :value="p.id">{{ p.name }}</option>
+                        </select>
+                        
                         <div v-if="incomeMode==='single'" class="grid grid-cols-2 gap-3 animate-fade-in">
-                            <input type="text" v-model="incomeForm.termName" placeholder="期數" class="sheikah-input text-sm">
+                            <input type="text" v-model="incomeForm.termName" placeholder="期數名稱" class="sheikah-input text-sm">
                             <input type="number" v-model.number="incomeForm.expectedAmount" placeholder="金額" class="sheikah-input text-sm font-mono">
-                            <input type="text" v-model="incomeForm.expectedDate" placeholder="日期或條件" class="sheikah-input text-sm font-mono col-span-2">
-                            <button @click="submitIncome" class="col-span-2 w-full bg-stone-200 text-stone-600 py-2 text-xs rounded hover:bg-[#FF4D00] hover:text-white">加入預算</button>
+                            <input type="text" v-model="incomeForm.expectedDate" placeholder="日期/條件" class="sheikah-input text-sm font-mono col-span-2">
+                            <button @click="submitIncome" class="col-span-2 w-full bg-stone-200 text-stone-600 py-2 text-xs rounded hover:bg-[#FF4D00] hover:text-white transition-colors">加入預算</button>
                         </div>
+                        
                         <div v-if="incomeMode==='batch'" class="space-y-4 animate-fade-in">
                             <div v-if="batchDraft.length === 0" class="grid grid-cols-2 gap-3">
                                 <input type="number" v-model.number="batchInput.totalAmount" placeholder="總額" class="sheikah-input text-sm font-mono">
                                 <input type="number" v-model.number="batchInput.count" placeholder="期數" class="sheikah-input text-sm font-mono">
-                                <button @click="generateDraft" class="col-span-2 w-full bg-stone-800 text-white py-2 text-xs rounded hover:bg-[#FF4D00]">擬定草稿</button>
+                                <button @click="generateDraft" class="col-span-2 w-full bg-stone-800 text-white py-2 text-xs rounded hover:bg-[#FF4D00] transition-colors">擬定草稿</button>
                             </div>
                             <div v-else class="space-y-3">
-                                <div class="flex justify-between items-center border-b pb-1"><span class="text-xs font-bold text-stone-500">預算草稿</span><button @click="batchDraft=[]" class="text-[10px] text-red-400 underline">重置</button></div>
-                                <div v-for="(item, index) in batchDraft" :key="index" class="flex space-x-2 items-center"><span class="text-[10px] w-6 text-stone-400 font-mono">{{index+1}}.</span><input type="text" v-model="item.termName" class="flex-1 sheikah-input py-1 text-xs"><input type="number" v-model.number="item.expectedAmount" class="w-20 sheikah-input py-1 text-xs text-right font-mono"><input type="text" v-model="item.expectedDate" placeholder="日期/條件" class="w-24 sheikah-input py-1 text-xs text-right"><button @click="batchDraft.splice(index, 1)" class="text-red-300 hover:text-red-500">×</button></div>
-                                <div class="text-right text-[10px] font-mono" :class="draftTotal == batchInput.totalAmount ? 'text-stone-400' : 'text-red-500'">分配: ${{ draftTotal }} / 目標: ${{ batchInput.totalAmount }}</div>
+                                <div class="flex justify-between items-center border-b pb-1">
+                                    <span class="text-xs font-bold text-stone-500">預算草稿</span>
+                                    <button @click="batchDraft=[]" class="text-[10px] text-red-400 underline">重置</button>
+                                </div>
+                                <div v-for="(item, index) in batchDraft" :key="index" class="flex space-x-2 items-center">
+                                    <span class="text-[10px] w-6 text-stone-400 font-mono">{{index+1}}.</span>
+                                    <input type="text" v-model="item.termName" class="flex-1 sheikah-input py-1 text-xs">
+                                    <input type="number" v-model.number="item.expectedAmount" class="w-20 sheikah-input py-1 text-xs text-right font-mono">
+                                    <input type="text" v-model="item.expectedDate" placeholder="日期/條件" class="w-24 sheikah-input py-1 text-xs text-right">
+                                    <button @click="batchDraft.splice(index, 1)" class="text-red-300 hover:text-red-500">×</button>
+                                </div>
+                                <div class="text-right text-[10px] font-mono" :class="draftTotal == batchInput.totalAmount ? 'text-stone-400' : 'text-red-500'">
+                                    分配: ${{ draftTotal }} / 目標: ${{ batchInput.totalAmount }}
+                                </div>
                                 <button @click="submitBatchDraft" class="w-full btn-sheikah py-2 text-xs">確認寫入</button>
                             </div>
                         </div>
                     </div>
+                    
                     <div class="space-y-4 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
                         <div v-for="(stat, pid) in projectStats" :key="pid">
                             <div v-if="stat.incomeTerms && stat.incomeTerms.length > 0">
                                 <h4 class="text-xs font-bold text-stone-500 mb-2 mt-4 border-b pb-1">{{ stat.name }}</h4>
                                 <div v-for="term in stat.incomeTerms" :key="term.id" class="flex justify-between items-center bg-white p-3 mb-2 rounded border border-stone-100 shadow-sm">
-                                    <div><div class="text-sm font-bold text-stone-700">{{ term.termName }}</div><div class="text-[10px] text-stone-400 font-mono">預計: {{ term.expDate }} / ${{ term.expAmt }}</div></div>
-                                    <div class="text-right"><button v-if="term.status === 'pending'" @click="receiveMoney(term)" class="border border-stone-300 text-stone-400 px-3 py-1 text-xs rounded hover:border-[#FF4D00] hover:text-[#FF4D00]">確認收款</button><div v-else class="text-[#FF4D00] text-xs font-bold border border-[#FF4D00] px-2 py-1 rounded bg-orange-50">已入帳 ${{ term.actAmt }}</div></div>
+                                    <div>
+                                        <div class="text-sm font-bold text-stone-700">{{ term.termName }}</div>
+                                        <div class="text-[10px] text-stone-400 font-mono">預計: {{ term.expDate }} / ${{ term.expAmt }}</div>
+                                    </div>
+                                    <div class="text-right">
+                                        <button v-if="term.status === 'pending'" @click="receiveMoney(term)" class="border border-stone-300 text-stone-400 px-3 py-1 text-xs rounded hover:border-[#FF4D00] hover:text-[#FF4D00]">確認收款</button>
+                                        <div v-else class="text-[#FF4D00] text-xs font-bold border border-[#FF4D00] px-2 py-1 rounded bg-orange-50">已入帳 ${{ term.actAmt }}</div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -197,46 +294,89 @@
                 </div>
 
                 <div v-if="currentTab === 'status'" class="space-y-4 overflow-y-auto max-h-[450px] pr-2">
-                    <div v-for="(stat, pid) in projectStats" :key="pid" class="border border-stone-200 p-4 rounded bg-white/60 relative overflow-hidden">
-                        <div class="flex justify-between items-start mb-2 relative z-10"><h3 class="text-sm font-bold text-stone-700">{{ stat.name }}</h3><span :class="stat.balance >= 0 ? 'text-stone-500' : 'text-red-500'" class="font-mono text-xs font-bold">現金流 ${{ stat.balance }}</span></div>
-                        <div class="text-[10px] text-stone-400 mb-1 flex justify-between"><span>預算消耗 (${{stat.totalExpense}} / ${{stat.totalBudget}})</span></div><div class="progress-container mb-3"><div class="progress-bar bg-[#FF4D00]" :style="{width: calcPercent(stat.totalExpense, stat.totalBudget) + '%'}"></div></div>
-                        <div class="text-[10px] text-stone-400 mb-1 flex justify-between"><span>資金回收 (${{stat.totalReceived}} / ${{stat.totalBudget}})</span></div><div class="progress-container"><div class="progress-bar bg-stone-600" :style="{width: calcPercent(stat.totalReceived, stat.totalBudget) + '%'}"></div></div>
+                    <div v-for="(stat, pid) in projectStats" :key="pid" @click="openProjectDetail(stat, pid)" class="border border-stone-200 p-4 rounded bg-white/60 relative overflow-hidden cursor-pointer hover:shadow-md transition-shadow group">
+                        <div class="flex justify-between items-start mb-2 relative z-10">
+                            <h3 class="text-sm font-bold text-stone-700 group-hover:text-[#FF4D00] transition-colors">{{ stat.name }}</h3>
+                            <span :class="stat.balance >= 0 ? 'text-stone-500' : 'text-red-500'" class="font-mono text-xs font-bold">
+                                餘 ${{ stat.balance }} >
+                            </span>
+                        </div>
+                        <div class="text-[10px] text-stone-400 mb-1 flex justify-between"><span>預算消耗 (${{stat.totalExpense}} / ${{stat.totalBudget}})</span></div>
+                        <div class="progress-container mb-3"><div class="progress-bar bg-[#FF4D00]" :style="{width: calcPercent(stat.totalExpense, stat.totalBudget) + '%'}"></div></div>
+                        <div class="text-[10px] text-stone-400 mb-1 flex justify-between"><span>資金回收 (${{stat.totalReceived}} / ${{stat.totalBudget}})</span></div>
+                        <div class="progress-container"><div class="progress-bar bg-stone-600" :style="{width: calcPercent(stat.totalReceived, stat.totalBudget) + '%'}"></div></div>
                     </div>
                 </div>
 
                 <div v-if="currentTab === 'transfer'" class="space-y-6">
                     <div class="bg-orange-50 text-orange-800 p-3 rounded text-xs border border-orange-100">此功能為公司撥款給成員，不計入專案成本。</div>
-                    <div><label class="text-[10px] text-stone-400">收款人</label><select v-model="transferForm.targetUser" class="sheikah-input w-full py-2 text-sm"><option disabled value="">選擇...</option><option v-for="u in users" :key="u.id" :value="u.name">{{ u.name }} (${{u.pettyCash}})</option></select></div>
+                    <div><label class="text-[10px] text-stone-400">收款人</label><select v-model="transferForm.targetUser" class="sheikah-input w-full py-2 text-sm"><option v-for="u in users" :key="u.id" :value="u.name">{{ u.name }} (${{u.pettyCash}})</option></select></div>
                     <div><label class="text-[10px] text-stone-400">金額</label><input type="number" v-model.number="transferForm.amount" class="sheikah-input w-full py-2 text-2xl font-mono text-[#FF4D00]"></div>
                     <div><label class="text-[10px] text-stone-400">備註</label><input type="text" v-model="transferForm.note" class="sheikah-input w-full py-2 text-sm"></div>
                     <button @click="submitTransfer" class="w-full btn-sheikah py-3 mt-4 text-sm tracking-widest">確認撥款</button>
                 </div>
             </div>
         </div>
-        <p class="text-center text-stone-300 text-[10px] mt-6 tracking-widest font-mono">TranStation Lab v6.0</p>
+
+        <div v-if="selectedProject" class="modal-mask" @click.self="selectedProject = null">
+            <div class="sheikah-panel rounded-lg p-6 modal-card corner-deco bg-white">
+                <div class="flex justify-between items-start mb-4 border-b pb-2">
+                    <h2 class="text-lg font-bold text-stone-800">{{ selectedProject.name }}</h2>
+                    <button @click="selectedProject = null" class="text-stone-400 hover:text-red-500 text-lg font-bold">✕</button>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4 mb-6 bg-stone-50 p-4 rounded text-xs">
+                    <div><div class="text-stone-400 mb-1">總預算 (應收)</div><div class="font-mono text-sm font-bold">${{ selectedProject.totalBudget }}</div></div>
+                    <div><div class="text-stone-400 mb-1">實際入帳</div><div class="font-mono text-sm font-bold text-stone-600">${{ selectedProject.totalReceived }}</div></div>
+                    <div><div class="text-stone-400 mb-1">實際支出</div><div class="font-mono text-sm font-bold text-[#FF4D00]">${{ selectedProject.totalExpense }}</div></div>
+                    <div><div class="text-stone-400 mb-1">現金流結餘</div><div class="font-mono text-sm font-bold" :class="selectedProject.balance>=0?'text-stone-600':'text-red-500'">${{ selectedProject.balance }}</div></div>
+                </div>
+
+                <h3 class="text-xs font-bold text-[#FF4D00] mb-3">收支紀錄明細</h3>
+                <div class="space-y-2 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
+                    <div v-if="projectHistory.length === 0" class="text-center text-xs text-stone-300 py-4">無紀錄</div>
+                    <div v-for="(tx, i) in projectHistory" :key="i" class="flex justify-between items-center p-2 border-b border-stone-100 last:border-0 text-xs hover:bg-stone-50 transition-colors">
+                        <div>
+                            <div class="font-bold text-stone-700">{{ tx.item }}</div>
+                            <div class="text-[10px] text-stone-400">{{ tx.date }} · {{ tx.payer }} · {{ tx.operator }}</div>
+                        </div>
+                        <div class="font-mono text-right">
+                            <div class="font-bold" :class="tx.isIncome ? 'text-stone-600' : 'text-[#FF4D00]'">
+                                {{ tx.isIncome ? '+' : '-' }}${{ tx.amount }}
+                            </div>
+                            <div class="text-[10px] text-stone-400">{{ tx.type }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <p class="text-center text-stone-300 text-[10px] mt-6 tracking-widest font-mono">TranStation Lab v7.0</p>
     </div>
 
     <script>
-        const { createApp, ref, computed, onMounted, onUnmounted, watch } = Vue;
+        const { createApp, ref, computed, onMounted, onUnmounted } = Vue;
         // ⚠️ 請確認這是最新的 GAS 網址
         const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbyKtICKtLnl01vytLz90174UICy1bfdMbKQdRqeZX3KOhyQGwJNQyXQDouxnXXfEfLQ/exec';
 
         createApp({
             setup() {
-                const currentUser = ref(null); // 登入者
+                // 狀態變數
+                const currentUser = ref(null);
                 const loginForm = ref({ username: '', password: '' });
                 const loginError = ref('');
                 const isLoggingIn = ref(false);
-
                 const currentTab = ref('record');
                 const loading = ref(true);
                 const projects = ref([]);
                 const users = ref([]);
                 const projectStats = ref({});
+                const allExpenses = ref([]); 
                 const autoRefreshTimer = ref(30);
                 let refreshInterval = null;
                 let timerInterval = null;
 
+                // 表單資料
                 const form = ref({ date: new Date().toISOString().split('T')[0], payer: '', paymentType: '零用金', items: [{ projectId: '', itemName: '', amount: '', note: '' }] });
                 const transferForm = ref({ date: new Date().toISOString().split('T')[0], targetUser: '', amount: '', note: '', action: 'replenish' });
                 const newProjectName = ref('');
@@ -245,9 +385,47 @@
                 const incomeForm = ref({ termName: '', expectedAmount: '', expectedDate: '' });
                 const batchInput = ref({ totalAmount: '', count: '' });
                 const batchDraft = ref([]);
+                
+                // 專案明細 Modal 邏輯
+                const selectedProject = ref(null);
+                
+                // 計算屬性：專案歷史紀錄 (合併收入與支出)
+                const projectHistory = computed(() => {
+                    if (!selectedProject.value) return [];
+                    const pid = selectedProject.value.id;
+                    const pname = selectedProject.value.name;
+                    
+                    // 1. 整理收入 (已入帳的)
+                    const incomes = (selectedProject.value.incomeTerms || [])
+                        .filter(i => i.status === 'received')
+                        .map(i => ({ 
+                            date: i.actDate, 
+                            item: i.termName + ' (入帳)', 
+                            amount: i.actAmt, 
+                            payer: '公司入帳', 
+                            type: '收入', 
+                            isIncome: true,
+                            operator: '-'
+                        }));
+                    
+                    // 2. 整理支出 (比對 ID 和 名稱)
+                    const exps = allExpenses.value
+                        .filter(e => e.project === pid || e.project === pname)
+                        .map(e => ({ ...e, isIncome: false }));
 
+                    // 3. 合併並按日期排序 (新到舊)
+                    return [...incomes, ...exps].sort((a, b) => new Date(b.date) - new Date(a.date));
+                });
+
+                // 計算屬性
                 const totalAmount = computed(() => form.value.items.reduce((sum, i) => sum + (Number(i.amount)||0), 0));
                 const draftTotal = computed(() => batchDraft.value.reduce((sum, i) => sum + (Number(i.expectedAmount)||0), 0));
+                
+                // 取得使用者餘額
+                const getUserBalance = (name) => {
+                    const u = users.value.find(user => user.name === name);
+                    return u ? u.pettyCash : 0;
+                };
 
                 // 核心：讀取資料
                 const loadData = async (isBackground = false) => {
@@ -258,114 +436,136 @@
                         projects.value = data.projects;
                         users.value = data.users;
                         projectStats.value = data.projectStats;
-                    } catch (e) { console.error('Sync Error'); } 
+                        allExpenses.value = data.allExpenses || [];
+                        
+                        // 若 Modal 開啟中，即時更新其數據
+                        if (selectedProject.value) {
+                            // 嘗試用名稱或 ID 找回最新的狀態
+                            const key = Object.keys(data.projectStats).find(k => data.projectStats[k].name === selectedProject.value.name || k === selectedProject.value.id);
+                            if (key) {
+                                // 保留 id, 更新內容
+                                selectedProject.value = { id: key, ...data.projectStats[key] };
+                            }
+                        }
+
+                    } catch (e) { console.error('Sync Error', e); } 
                     finally { if (!isBackground) loading.value = false; }
                 };
 
-                // 登入
+                // 登入登出邏輯
                 const login = async () => {
                     if(!loginForm.value.username || !loginForm.value.password) return;
-                    isLoggingIn.value = true;
-                    loginError.value = '';
+                    isLoggingIn.value = true; loginError.value = '';
                     try {
-                        const res = await fetch(GAS_API_URL, {
-                            method: 'POST',
-                            body: JSON.stringify({ action: 'login', ...loginForm.value }),
-                            headers: { 'Content-Type': 'text/plain' }
-                        });
+                        const res = await fetch(GAS_API_URL, { method: 'POST', body: JSON.stringify({ action: 'login', ...loginForm.value }), headers: { 'Content-Type': 'text/plain' } });
                         const data = await res.json();
-                        if(data.status === 'success') {
-                            currentUser.value = data.user;
+                        if(data.status === 'success') { 
+                            currentUser.value = data.user; 
                             form.value.payer = data.user.name; // 預設付款人 = 自己
-                            startAutoRefresh();
-                        } else {
-                            loginError.value = data.message || '登入失敗';
-                        }
+                            startAutoRefresh(); 
+                        } else { loginError.value = data.message || '登入失敗'; }
                     } catch(e) { loginError.value = '連線錯誤'; }
                     finally { isLoggingIn.value = false; }
                 };
+                const logout = () => { currentUser.value = null; loginForm.value.password = ''; stopAutoRefresh(); selectedProject.value = null; };
 
-                const logout = () => {
-                    currentUser.value = null;
-                    loginForm.value.password = '';
-                    stopAutoRefresh();
+                // 自動更新計時器
+                const startAutoRefresh = () => { 
+                    autoRefreshTimer.value = 30; 
+                    refreshInterval = setInterval(() => { loadData(true); autoRefreshTimer.value = 30; }, 30000); 
+                    timerInterval = setInterval(() => { if(autoRefreshTimer.value > 0) autoRefreshTimer.value--; }, 1000); 
                 };
+                const stopAutoRefresh = () => { clearInterval(refreshInterval); clearInterval(timerInterval); };
+                const forceRefresh = () => { loadData(false); autoRefreshTimer.value = 30; };
 
-                // 自動更新機制
-                const startAutoRefresh = () => {
-                    autoRefreshTimer.value = 30;
-                    refreshInterval = setInterval(() => {
-                        loadData(true); // 背景更新
-                        autoRefreshTimer.value = 30;
-                    }, 30000);
-                    timerInterval = setInterval(() => {
-                        if(autoRefreshTimer.value > 0) autoRefreshTimer.value--;
-                    }, 1000);
-                };
-                const stopAutoRefresh = () => {
-                    clearInterval(refreshInterval);
-                    clearInterval(timerInterval);
-                };
-                const forceRefresh = () => {
-                    loadData(false); // 手動觸發，顯示 loading
-                    autoRefreshTimer.value = 30; // 重置計時器
-                };
-
-                onMounted(() => {
-                    loadData(); // 初始載入 (為了拿使用者清單)
-                });
+                onMounted(() => { loadData(); });
                 onUnmounted(() => stopAutoRefresh());
 
-                // 共用 API 呼叫包裝 (自動帶入 Operator)
+                // 共用 API 呼叫
                 const apiCall = async (payload) => {
                     loading.value = true;
                     try {
                         const finalPayload = { ...payload, operator: currentUser.value.name };
                         await fetch(GAS_API_URL, { method: 'POST', body: JSON.stringify(finalPayload), headers: {'Content-Type': 'text/plain'} });
-                        await loadData();
-                        return true;
+                        await loadData(); return true;
                     } catch(e) { alert('操作失敗'); return false; } 
                     finally { loading.value = false; }
                 };
 
-                // Actions
+                // 表單操作函式
                 const addItem = () => form.value.items.push({ projectId: '', itemName: '', amount: '', note: '' });
                 const removeItem = (i) => form.value.items.splice(i, 1);
                 const calcPercent = (c, t) => (!t||t===0)?0:Math.min((c/t)*100, 100);
-                const generateDraft = () => {
-                    if(!batchInput.value.totalAmount || !batchInput.value.count) return;
-                    const count = batchInput.value.count, base = Math.floor(batchInput.value.totalAmount/count), rem = batchInput.value.totalAmount-(base*count);
-                    batchDraft.value = Array.from({length:count}, (_,i) => ({termName:`第 ${i+1} 期`, expectedAmount:(i===count-1)?base+rem:base, expectedDate:''}));
+                
+                const generateDraft = () => { 
+                    if(!batchInput.value.totalAmount || !batchInput.value.count) return; 
+                    const count = batchInput.value.count, base = Math.floor(batchInput.value.totalAmount/count), rem = batchInput.value.totalAmount-(base*count); 
+                    batchDraft.value = Array.from({length:count}, (_,i) => ({termName:`第 ${i+1} 期`, expectedAmount:(i===count-1)?base+rem:base, expectedDate:''})); 
                 };
 
+                // 提交函式群
                 const submitForm = async () => { 
-                    if(await apiCall({...form.value, totalAmount: totalAmount.value})) { alert('✅ 記帳完成'); form.value.items=[{projectId:'',itemName:'',amount:'',note:''}]; }
+                    // 將 Project ID 轉為名稱後送出
+                    const itemsWithName = form.value.items.map(i => ({
+                        ...i, 
+                        projectName: projects.value.find(p=>p.id===i.projectId)?.name || i.projectId
+                    }));
+                    if(await apiCall({...form.value, items: itemsWithName, totalAmount: totalAmount.value})) { 
+                        alert('✅ 記帳完成'); 
+                        form.value.items=[{projectId:'',itemName:'',amount:'',note:''}]; 
+                    } 
                 };
-                const submitCreateProject = async () => {
-                    if(newProjectName.value && await apiCall({action:'createProject', projectName:newProjectName.value})) { alert('✨ 專案已建立'); newProjectName.value=''; }
+                
+                const submitCreateProject = async () => { if(newProjectName.value && await apiCall({action:'createProject', projectName:newProjectName.value})) { alert('✨ 專案已建立'); newProjectName.value=''; } };
+                
+                const submitIncome = async () => { 
+                    const pName = projects.value.find(p=>p.id===incomeProjectId.value)?.name;
+                    if(await apiCall({...incomeForm.value, projectId:incomeProjectId.value, projectName: pName, action:'income'})) { 
+                        alert('✅ 預算已新增'); incomeForm.value={termName:'',expectedAmount:'',expectedDate:''}; 
+                    } 
                 };
-                const submitIncome = async () => {
-                    if(await apiCall({...incomeForm.value, projectId:incomeProjectId.value, action:'income'})) { alert('✅ 預算已新增'); incomeForm.value={termName:'',expectedAmount:'',expectedDate:''}; }
+                
+                const submitBatchDraft = async () => { 
+                    const pName = projects.value.find(p=>p.id===incomeProjectId.value)?.name;
+                    const items = batchDraft.value.map(i => ({...i, projectId:incomeProjectId.value, projectName: pName})); 
+                    if(await apiCall({action:'batchIncome', items})) { 
+                        alert(`✅ 已產生 ${items.length} 筆預算`); 
+                        batchDraft.value=[]; batchInput.value={totalAmount:'',count:''}; 
+                    } 
                 };
-                const submitBatchDraft = async () => {
-                    const items = batchDraft.value.map(i => ({...i, projectId:incomeProjectId.value}));
-                    if(await apiCall({action:'batchIncome', items})) { alert(`✅ 已產生 ${items.length} 筆預算`); batchDraft.value=[]; batchInput.value={totalAmount:'',count:''}; }
+                
+                const submitTransfer = async () => { if(await apiCall(transferForm.value)) { alert('✅ 撥款完成'); transferForm.value.amount=''; } };
+                
+                const receiveMoney = async (term) => { 
+                    const amt = prompt('實際金額:', term.expAmt); if(amt===null)return; 
+                    const date = prompt('入帳日期:', new Date().toISOString().split('T')[0]); if(date===null)return; 
+                    const pName = projects.value.find(p=>p.id===term.projectId)?.name;
+                    if(await apiCall({
+                        action:'income', 
+                        id:term.id, 
+                        projectId:term.projectId, 
+                        projectName: pName,
+                        termName:term.termName, 
+                        expectedDate:term.expDate, 
+                        expectedAmount:term.expAmt, 
+                        actualDate:date, 
+                        actualAmount:amt, 
+                        status:'received'
+                    })) alert('💰 收款確認'); 
                 };
-                const submitTransfer = async () => {
-                    if(await apiCall(transferForm.value)) { alert('✅ 撥款完成'); transferForm.value.amount=''; }
-                };
-                const receiveMoney = async (term) => {
-                    const amt = prompt('實際金額:', term.expAmt); if(amt===null)return;
-                    const date = prompt('入帳日期:', new Date().toISOString().split('T')[0]); if(date===null)return;
-                    if(await apiCall({action:'income', id:term.id, projectId:term.projectId, termName:term.termName, expectedDate:term.expDate, expectedAmount:term.expAmt, actualDate:date, actualAmount:amt, status:'received'})) alert('💰 收款確認');
+                
+                // 開啟 Modal
+                const openProjectDetail = (stat, pid) => {
+                    selectedProject.value = { id: pid, ...stat };
                 };
 
                 return { 
-                    currentUser, loginForm, loginError, isLoggingIn, login, logout,
-                    currentTab, loading, autoRefreshTimer, forceRefresh,
+                    currentUser, loginForm, loginError, isLoggingIn, login, logout, 
+                    currentTab, loading, autoRefreshTimer, forceRefresh, 
                     projects, users, projectStats, 
                     form, transferForm, incomeForm, batchInput, batchDraft, draftTotal, incomeMode, newProjectName, incomeProjectId, totalAmount, 
-                    addItem, removeItem, submitForm, submitTransfer, submitIncome, submitCreateProject, generateDraft, submitBatchDraft, receiveMoney, calcPercent 
+                    addItem, removeItem, submitForm, submitTransfer, submitIncome, submitCreateProject, generateDraft, submitBatchDraft, receiveMoney, calcPercent, getUserBalance,
+                    selectedProject, openProjectDetail, projectHistory
                 };
             }
         }).mount('#app');
