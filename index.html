@@ -3,125 +3,272 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>轉駅創研 | 預算記帳管理系統</title>
+    <title>TranStation OS | 希卡預算系統</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
 
     <style>
-        body { font-family: 'Noto Sans TC', sans-serif; background-color: #FFF7ED; color: #431407; }
-        .bg-blob { position: absolute; filter: blur(80px); opacity: 0.6; z-index: -1; animation: move 10s infinite alternate; }
-        @keyframes move { from { transform: translate(0, 0) scale(1); } to { transform: translate(20px, -20px) scale(1.1); } }
-        .glass-card { background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.8); box-shadow: 0 8px 32px rgba(249, 115, 22, 0.1); }
-        .input-field { background: rgba(255, 255, 255, 0.8); border: 1px solid #FED7AA; transition: all 0.3s ease; }
-        .input-field:focus { outline: none; border-color: #F97316; box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1); }
-        /* 錯誤訊息區塊 */
-        .error-box { background: #FEF2F2; border: 1px solid #FCA5A5; color: #991B1B; font-size: 0.8rem; padding: 10px; border-radius: 8px; margin-top: 10px; word-break: break-all; }
+        :root {
+            --sheikah-bg: #F0F2E8; /* Snow Peak 帆布白 */
+            --sheikah-dark: #2D2D2D; /* 深岩石灰 */
+            --sheikah-orange: #FF4D00; /* 希卡螢光橘 */
+            --sheikah-blue: #00E0FF; /* 希卡能量藍 */
+            --glass-border: rgba(45, 45, 45, 0.1);
+        }
+
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: var(--sheikah-bg);
+            color: var(--sheikah-dark);
+            /* 希卡地圖網格背景 */
+            background-image: 
+                linear-gradient(var(--glass-border) 1px, transparent 1px),
+                linear-gradient(90deg, var(--glass-border) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        /* 數字字體 */
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+
+        /* 希卡面板 */
+        .sheikah-panel {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* 裝飾線條 (角落) */
+        .corner-deco::before, .corner-deco::after {
+            content: ''; position: absolute; width: 10px; height: 10px;
+            border: 1px solid var(--sheikah-orange); transition: all 0.3s ease;
+        }
+        .corner-deco::before { top: 0; left: 0; border-right: none; border-bottom: none; }
+        .corner-deco::after { bottom: 0; right: 0; border-left: none; border-top: none; }
+
+        /* 輸入框 */
+        .sheikah-input {
+            background: transparent;
+            border-bottom: 1px solid #CCC;
+            border-radius: 0;
+            transition: all 0.3s;
+        }
+        .sheikah-input:focus {
+            outline: none;
+            border-bottom: 1px solid var(--sheikah-orange);
+            background: rgba(255, 77, 0, 0.03);
+        }
+
+        /* 按鈕風格 (Snow Peak x Sheikah) */
+        .btn-sheikah {
+            border: 1px solid var(--sheikah-orange);
+            color: var(--sheikah-orange);
+            background: transparent;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .btn-sheikah:hover {
+            background: var(--sheikah-orange);
+            color: white;
+            box-shadow: 0 0 10px rgba(255, 77, 0, 0.3);
+        }
+        .btn-sheikah-fill {
+            background: var(--sheikah-orange);
+            color: white;
+            border: 1px solid var(--sheikah-orange);
+        }
+        .btn-sheikah-fill:hover {
+            background: #E04400;
+        }
+
+        /* 頁籤切換 */
+        .tab-btn {
+            border-bottom: 2px solid transparent;
+            opacity: 0.5;
+        }
+        .tab-btn.active {
+            border-bottom: 2px solid var(--sheikah-orange);
+            opacity: 1;
+            color: var(--sheikah-orange);
+        }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+<body class="min-h-screen flex items-center justify-center p-4">
 
-    <div class="bg-blob bg-orange-300 w-96 h-96 rounded-full top-0 left-0 mix-blend-multiply"></div>
-    <div class="bg-blob bg-amber-200 w-96 h-96 rounded-full bottom-0 right-0 mix-blend-multiply animation-delay-2000"></div>
-
-    <div id="app" class="w-full max-w-lg">
+    <div id="app" class="w-full max-w-xl">
         
-        <div class="glass-card rounded-3xl p-8 relative">
+        <div class="mb-6 flex justify-between items-end">
+            <div>
+                <h1 class="text-xs font-bold tracking-[0.2em] text-stone-400 mb-1">TranStation Lab</h1>
+                <h2 class="text-2xl font-light tracking-widest text-stone-800">BUDGET <span class="text-[#FF4D00]">OS</span></h2>
+            </div>
+            <div class="flex items-center space-x-2 text-xs text-stone-400">
+                <span :class="loading ? 'bg-yellow-400 animate-pulse' : 'bg-[#FF4D00]'" class="w-2 h-2 rounded-full"></span>
+                <span>{{ loading ? 'SYNCING...' : 'ONLINE' }}</span>
+            </div>
+        </div>
+
+        <div class="sheikah-panel rounded-lg p-6 corner-deco">
             
-            <div class="mb-8 text-center">
-                <div class="inline-block px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-bold tracking-wider mb-2">TranStation Lab</div>
-                <h1 class="text-3xl font-bold text-stone-800 tracking-tight mb-1">預算記帳系統</h1>
-                <p class="text-stone-500 text-sm">財務透明 · 專案分流 · 青年共創</p>
+            <div class="flex space-x-6 mb-8 border-b border-stone-200 pb-1">
+                <button @click="currentTab = 'record'" :class="{active: currentTab === 'record'}" class="tab-btn pb-2 text-sm font-bold tracking-wide transition-all">
+                    支出記帳
+                </button>
+                <button @click="currentTab = 'status'" :class="{active: currentTab === 'status'}" class="tab-btn pb-2 text-sm font-bold tracking-wide transition-all">
+                    專案儀表板
+                </button>
+                <button @click="currentTab = 'transfer'" :class="{active: currentTab === 'transfer'}" class="tab-btn pb-2 text-sm font-bold tracking-wide transition-all">
+                    撥補零用金
+                </button>
             </div>
 
-            <div v-if="loading" class="flex flex-col items-center justify-center py-10 space-y-3">
-                <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-500"></div>
-                <p class="text-stone-500 text-sm animate-pulse">{{ statusMessage }}</p>
-                <div v-if="errorMessage" class="error-box">
-                    <strong>錯誤詳情：</strong><br>
-                    {{ errorMessage }}
-                </div>
-            </div>
-
-            <form v-else @submit.prevent="submitForm" class="space-y-5">
-                
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="col-span-2 sm:col-span-1">
-                        <label class="block text-xs font-bold text-stone-500 mb-1 ml-1">消費日期</label>
-                        <input type="date" v-model="form.date" required class="input-field w-full rounded-xl px-4 py-2 text-stone-700">
+            <div v-if="currentTab === 'record'" class="animate-fade-in space-y-6">
+                <div class="grid grid-cols-2 gap-6">
+                    <div>
+                        <label class="text-[10px] text-stone-400 uppercase tracking-widest">DATE</label>
+                        <input type="date" v-model="form.date" class="sheikah-input w-full py-2 text-sm font-mono">
                     </div>
-                    
-                    <div class="col-span-2 sm:col-span-1">
-                        <label class="block text-xs font-bold text-stone-500 mb-1 ml-1">經手人</label>
-                        <select v-model="form.payer" required class="input-field w-full rounded-xl px-4 py-2 text-stone-700 appearance-none bg-white">
-                            <option disabled value="">選擇成員</option>
-                            <option v-for="u in users" :key="u.id" :value="u.name">{{ u.name }} (剩 ${{ u.pettyCash }})</option>
+                    <div>
+                        <label class="text-[10px] text-stone-400 uppercase tracking-widest">PAYER</label>
+                        <select v-model="form.payer" class="sheikah-input w-full py-2 text-sm">
+                            <option disabled value="">Select User</option>
+                            <option v-for="u in users" :key="u.id" :value="u.name">{{ u.name }} (剩${{u.pettyCash}})</option>
                         </select>
                     </div>
-
-                    <div class="col-span-2">
-                        <label class="block text-xs font-bold text-stone-500 mb-2 ml-1">資金來源</label>
-                        <div class="flex space-x-2">
-                            <button type="button" @click="form.paymentType = '零用金'" :class="form.paymentType === '零用金' ? 'bg-orange-500 text-white shadow-lg' : 'bg-white text-stone-500 hover:bg-orange-50'" class="flex-1 py-2 rounded-xl text-sm font-medium transition-all">🌲 公司零用金</button>
-                            <button type="button" @click="form.paymentType = '代墊'" :class="form.paymentType === '代墊' ? 'bg-orange-500 text-white shadow-lg' : 'bg-white text-stone-500 hover:bg-orange-50'" class="flex-1 py-2 rounded-xl text-sm font-medium transition-all">🙋 個人先墊</button>
-                        </div>
-                    </div>
                 </div>
-
-                <hr class="border-stone-200 border-dashed my-4">
 
                 <div>
-                    <div class="flex justify-between items-end mb-2">
-                        <label class="block text-xs font-bold text-stone-500 ml-1">消費明細</label>
-                        <span class="text-xs text-orange-600 font-bold bg-orange-100 px-2 py-0.5 rounded-md">總計: ${{ totalAmount }}</span>
+                    <label class="text-[10px] text-stone-400 uppercase tracking-widest mb-2 block">METHOD</label>
+                    <div class="flex space-x-3">
+                        <button @click="form.paymentType = '零用金'" 
+                            :class="form.paymentType === '零用金' ? 'btn-sheikah-fill' : 'border border-stone-300 text-stone-400'"
+                            class="flex-1 py-2 text-xs rounded transition-all">
+                            公款零用金
+                        </button>
+                        <button @click="form.paymentType = '代墊'" 
+                            :class="form.paymentType === '代墊' ? 'btn-sheikah-fill' : 'border border-stone-300 text-stone-400'"
+                            class="flex-1 py-2 text-xs rounded transition-all">
+                            個人代墊
+                        </button>
+                    </div>
+                </div>
+
+                <div class="pt-4 border-t border-dashed border-stone-200">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-xs font-bold text-stone-500">ITEMS LIST</span>
+                        <span class="text-sm font-mono font-bold text-[#FF4D00]">TOTAL: ${{ totalAmount }}</span>
                     </div>
 
-                    <div class="space-y-3">
-                        <div v-for="(item, index) in form.items" :key="index" class="bg-white/50 p-3 rounded-xl border border-white relative group hover:shadow-sm transition-all">
-                            <button v-if="form.items.length > 1" @click="removeItem(index)" type="button" class="absolute -top-2 -right-2 bg-red-100 text-red-400 rounded-full p-1 hover:bg-red-500 hover:text-white transition-colors">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" /></svg>
-                            </button>
-                            <div class="flex space-x-2 mb-2">
-                                <select v-model="item.projectId" required class="flex-[2] input-field rounded-lg px-2 py-1.5 text-sm">
-                                    <option disabled value="">歸屬專案...</option>
-                                    <option v-for="p in projects" :key="p.id" :value="p.id">{{ p.name }}</option>
-                                </select>
-                                <input type="number" v-model.number="item.amount" placeholder="$金額" required class="flex-1 input-field rounded-lg px-2 py-1.5 text-sm">
+                    <div v-for="(item, index) in form.items" :key="index" class="mb-4 relative group">
+                        <button v-if="form.items.length > 1" @click="removeItem(index)" type="button" class="absolute -left-6 top-2 text-stone-300 hover:text-red-500">×</button>
+                        <div class="flex space-x-2 mb-2">
+                            <select v-model="item.projectId" class="flex-[2] sheikah-input py-1 text-sm bg-stone-50/50">
+                                <option disabled value="">Project...</option>
+                                <option v-for="p in projects" :key="p.id" :value="p.id">{{ p.name }}</option>
+                            </select>
+                            <input type="number" v-model.number="item.amount" placeholder="$$" class="flex-1 sheikah-input py-1 text-sm text-right font-mono">
+                        </div>
+                        <div class="flex space-x-2">
+                            <input type="text" v-model="item.itemName" placeholder="Item Name" class="flex-[2] sheikah-input py-1 text-xs">
+                            <input type="text" v-model="item.note" placeholder="Note" class="flex-1 sheikah-input py-1 text-xs text-stone-400">
+                        </div>
+                    </div>
+
+                    <button @click="addItem" type="button" class="w-full py-2 border border-dashed border-stone-300 text-stone-400 text-xs hover:border-[#FF4D00] hover:text-[#FF4D00] transition-colors">
+                        + ADD ITEM
+                    </button>
+                </div>
+
+                <button @click="submitForm" class="w-full btn-sheikah py-3 mt-4 text-sm tracking-widest uppercase">
+                    EXECUTE RECORD
+                </button>
+            </div>
+
+            <div v-if="currentTab === 'status'" class="animate-fade-in">
+                <div class="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                    
+                    <div v-for="(stat, pid) in projectStats" :key="pid" class="border border-stone-200 p-4 rounded bg-white/40">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="text-sm font-bold text-stone-700">{{ stat.name }}</h3>
+                            <span :class="stat.balance >= 0 ? 'text-stone-500' : 'text-red-500'" class="font-mono text-xs font-bold">
+                                {{ stat.balance >= 0 ? '結餘' : '超支' }} ${{ stat.balance }}
+                            </span>
+                        </div>
+                        
+                        <div class="h-1 w-full bg-stone-200 mb-3 overflow-hidden rounded-full">
+                            <div class="h-full bg-[#FF4D00]" :style="{width: calculateProgress(stat.totalExpense, stat.totalIncome) + '%'}"></div>
+                        </div>
+
+                        <div class="flex justify-between text-xs text-stone-500 font-mono">
+                            <div>
+                                <span class="block text-[10px] text-stone-400">INCOME</span>
+                                ${{ stat.totalIncome }}
                             </div>
-                            <div class="flex space-x-2">
-                                <input type="text" v-model="item.itemName" placeholder="項目說明..." required class="flex-[2] input-field rounded-lg px-2 py-1.5 text-sm">
-                                <input type="text" v-model="item.note" placeholder="備註" class="flex-1 input-field rounded-lg px-2 py-1.5 text-sm">
+                            <div class="text-right">
+                                <span class="block text-[10px] text-stone-400">EXPENSE</span>
+                                ${{ stat.totalExpense }}
                             </div>
                         </div>
                     </div>
-                    <button type="button" @click="addItem" class="w-full mt-3 py-2 border border-dashed border-orange-300 text-orange-400 rounded-xl text-sm hover:bg-orange-50 hover:border-orange-500 transition-colors">+ 新增一筆拆帳</button>
+
+                </div>
+                <div class="mt-4 text-[10px] text-stone-400 text-center">
+                    * INTERNAL 專案為公司資產/內部轉帳
+                </div>
+            </div>
+
+            <div v-if="currentTab === 'transfer'" class="animate-fade-in space-y-6">
+                <div class="bg-orange-50 border border-orange-100 p-4 rounded text-xs text-orange-800 mb-4">
+                    ⚠️ 此功能為「公司撥款」給成員，將增加成員身上的零用金餘額，不計入專案成本。
                 </div>
 
-                <div class="pt-4">
-                    <button type="submit" class="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold py-3.5 rounded-2xl shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50 hover:scale-[1.02] active:scale-95 transition-all duration-300">確認寫入帳本</button>
+                <div>
+                    <label class="text-[10px] text-stone-400 uppercase tracking-widest">TARGET USER</label>
+                    <select v-model="transferForm.targetUser" class="sheikah-input w-full py-2 text-sm">
+                        <option disabled value="">選擇收款人</option>
+                        <option v-for="u in users" :key="u.id" :value="u.name">{{ u.name }} (目前餘額 ${{u.pettyCash}})</option>
+                    </select>
                 </div>
-            </form>
+
+                <div>
+                    <label class="text-[10px] text-stone-400 uppercase tracking-widest">AMOUNT</label>
+                    <input type="number" v-model.number="transferForm.amount" placeholder="$$" class="sheikah-input w-full py-2 text-2xl font-mono text-[#FF4D00]">
+                </div>
+
+                <div>
+                    <label class="text-[10px] text-stone-400 uppercase tracking-widest">NOTE</label>
+                    <input type="text" v-model="transferForm.note" placeholder="例如：12月零用金補充" class="sheikah-input w-full py-2 text-sm">
+                </div>
+
+                <button @click="submitTransfer" class="w-full btn-sheikah py-3 mt-8 text-sm tracking-widest uppercase">
+                    CONFIRM TRANSFER
+                </button>
+            </div>
+
         </div>
-        <p class="text-center text-stone-400 text-xs mt-6 opacity-60">TranStation Lab © 2025</p>
+
+        <p class="text-center text-stone-300 text-[10px] mt-6 tracking-widest font-mono">TS-LAB v3.0 // SYSTEM NORMAL</p>
     </div>
 
     <script>
         const { createApp, ref, computed, onMounted } = Vue;
-
-        // ⚠️ 請務必確認這裡的網址是你剛剛「建立新版本」後拿到的最新網址！
+        // 記得檢查網址是否為最新版
         const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbyKtICKtLnl01vytLz90174UICy1bfdMbKQdRqeZX3KOhyQGwJNQyXQDouxnXXfEfLQ/exec';
 
         createApp({
             setup() {
+                const currentTab = ref('record');
                 const loading = ref(true);
-                const statusMessage = ref('正在連線轉駅資料庫...');
-                const errorMessage = ref(''); // 用來顯示具體錯誤
                 const projects = ref([]);
                 const users = ref([]);
+                const projectStats = ref({});
                 
+                // 記帳表單
                 const form = ref({
                     date: new Date().toISOString().split('T')[0],
                     payer: '',
@@ -129,75 +276,87 @@
                     items: [{ projectId: '', itemName: '', amount: '', note: '' }]
                 });
 
+                // 撥補表單
+                const transferForm = ref({
+                    date: new Date().toISOString().split('T')[0],
+                    targetUser: '',
+                    amount: '',
+                    note: '',
+                    action: 'replenish' // 標記為撥補動作
+                });
+
                 const totalAmount = computed(() => form.value.items.reduce((sum, item) => sum + (Number(item.amount) || 0), 0));
 
-                onMounted(async () => {
+                const loadData = async () => {
                     try {
-                        // 這裡使用 op=getData
-                        const response = await fetch(`${GAS_API_URL}?op=getData`);
-                        
-                        if (!response.ok) {
-                            throw new Error(`HTTP 錯誤: ${response.status}`);
-                        }
-
-                        const data = await response.json();
-                        
-                        // 檢查回傳資料結構
-                        if (!data.projects || !data.users) {
-                            throw new Error('資料庫回傳格式有誤，請檢查 GAS 代碼');
-                        }
-
+                        const res = await fetch(`${GAS_API_URL}?op=getData`);
+                        const data = await res.json();
                         projects.value = data.projects;
                         users.value = data.users;
+                        projectStats.value = data.projectStats;
                         loading.value = false;
-
                     } catch (e) {
-                        statusMessage.value = '讀取失敗';
-                        errorMessage.value = e.message + " (請檢查網址或權限)";
-                        console.error('API Error:', e);
+                        alert('連線錯誤');
+                        console.error(e);
                     }
-                });
+                };
+
+                onMounted(() => loadData());
 
                 const addItem = () => form.value.items.push({ projectId: '', itemName: '', amount: '', note: '' });
                 const removeItem = (index) => form.value.items.splice(index, 1);
+                
+                // 計算進度條百分比
+                const calculateProgress = (spent, income) => {
+                    if (!income || income === 0) return 0;
+                    return Math.min((spent / income) * 100, 100);
+                };
 
                 const submitForm = async () => {
+                    if(!form.value.payer) return alert('請選擇付款人');
                     loading.value = true;
-                    statusMessage.value = '正在寫入資料...';
-                    errorMessage.value = ''; // 清空錯誤
-                    
-                    const payload = { ...form.value, totalAmount: totalAmount.value };
-
                     try {
-                        // 使用 text/plain 繞過 CORS 複雜請求
+                        const payload = { ...form.value, totalAmount: totalAmount.value };
                         await fetch(GAS_API_URL, {
                             method: 'POST',
                             body: JSON.stringify(payload),
                             headers: { 'Content-Type': 'text/plain;charset=utf-8' }
                         });
-                        
-                        alert('✅ 寫入成功！');
-                        // 重置表單
+                        alert('✅ 記帳完成');
                         form.value.items = [{ projectId: '', itemName: '', amount: '', note: '' }];
-                        form.value.date = new Date().toISOString().split('T')[0];
-                        
-                        // 重新抓取資料更新餘額
-                        statusMessage.value = '更新餘額中...';
-                        const res = await fetch(`${GAS_API_URL}?op=getData`);
-                        const data = await res.json();
-                        users.value = data.users;
-
+                        await loadData();
                     } catch (e) {
-                        alert('❌ 寫入失敗');
-                        statusMessage.value = '寫入失敗';
-                        errorMessage.value = e.message;
-                        console.error(e);
+                        alert('❌ 失敗');
                     } finally {
                         loading.value = false;
                     }
                 };
 
-                return { loading, statusMessage, errorMessage, projects, users, form, totalAmount, addItem, removeItem, submitForm };
+                const submitTransfer = async () => {
+                    if(!transferForm.value.targetUser || !transferForm.value.amount) return alert('請填寫完整');
+                    loading.value = true;
+                    try {
+                        await fetch(GAS_API_URL, {
+                            method: 'POST',
+                            body: JSON.stringify(transferForm.value),
+                            headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                        });
+                        alert('✅ 撥補完成');
+                        transferForm.value.amount = '';
+                        transferForm.value.note = '';
+                        await loadData();
+                    } catch (e) {
+                        alert('❌ 失敗');
+                    } finally {
+                        loading.value = false;
+                    }
+                };
+
+                return { 
+                    currentTab, loading, projects, users, projectStats, 
+                    form, transferForm, totalAmount, 
+                    addItem, removeItem, submitForm, submitTransfer, calculateProgress 
+                };
             }
         }).mount('#app');
     </script>
