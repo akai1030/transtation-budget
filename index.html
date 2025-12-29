@@ -145,7 +145,7 @@
                     <h1 class="text-[10px] tracking-[0.3em] font-bold text-slate-500 uppercase">Financial OS</h1>
                 </div>
                 <h2 class="text-4xl font-serif text-slate-800 leading-none drop-shadow-sm">
-                    轉駅創研 <span class="block text-lg font-sans font-bold text-slate-400 mt-1 tracking-widest">預算帳務系統 v23</span>
+                    轉駅創研 <span class="block text-lg font-sans font-bold text-slate-400 mt-1 tracking-widest">預算帳務系統 v24</span>
                 </h2>
             </div>
             <div class="flex flex-col items-end gap-3">
@@ -257,20 +257,22 @@
                                     </div>
                                 </div>
                                 
-                                <div v-if="item.projectId && getProjectBudgetLines(item.projectId).length > 0" class="flex flex-wrap gap-2">
-                                    <div v-for="line in getProjectBudgetLines(item.projectId)" 
-                                         @click="item.category = line.category"
-                                         class="tag-pill px-3 py-1.5 text-[10px] cursor-pointer"
-                                         :class="item.category === line.category ? 'active' : 'hover:bg-slate-50'">
-                                        {{ line.category }}
+                                <div class="mt-2">
+                                    <div v-if="item.projectId && getProjectBudgetLines(item.projectId).length > 0" class="flex flex-wrap gap-2 mb-2">
+                                        <div v-for="line in getProjectBudgetLines(item.projectId)" 
+                                             @click="item.category = line.category"
+                                             class="tag-pill px-3 py-1.5 text-[10px] cursor-pointer"
+                                             :class="item.category === line.category ? 'active' : 'hover:bg-slate-50'">
+                                            {{ line.category }}
+                                        </div>
                                     </div>
+                                    <div v-else-if="item.projectId" class="text-[10px] text-slate-400 font-bold mb-2 flex items-center gap-1">
+                                        <span>💡</span><span>此專案尚未設定預算科目 (可直接選下方常用項目)</span>
+                                    </div>
+                                    <input type="text" v-model="item.category" list="common-items" placeholder="預算科目 (如: 交通費)" class="w-full bg-white/50 text-sm rounded-xl p-2.5 border border-slate-200 focus:outline-none focus:border-[#FB923C] font-bold text-slate-600 mb-2">
                                 </div>
-                                <div v-else-if="item.projectId" class="text-[10px] text-slate-400 font-bold bg-slate-50 px-3 py-2 rounded-xl border border-slate-100 flex items-center gap-2">
-                                    <span>💡</span>
-                                    <span>此專案尚未設定預算科目 (將歸類為雜支)</span>
-                                </div>
-                                
-                                <input type="text" v-model="item.itemName" list="common-items" placeholder="品項說明 (可選單或輸入)" class="w-full bg-transparent text-sm border-b border-slate-200 p-2 focus:outline-none focus:border-[#FB923C] font-medium text-slate-700">
+
+                                <input type="text" v-model="item.itemName" placeholder="詳細說明 (如: 台北高雄來回高鐵)" class="w-full bg-transparent text-sm border-b border-slate-200 p-2 focus:outline-none focus:border-[#FB923C] font-medium text-slate-700 transition-colors">
                             </div>
                         </div>
                         <button @click="form.items.push({projectId:'',amount:'',itemName:'',category:''})" class="w-full py-4 border border-dashed border-slate-300 text-slate-400 rounded-2xl text-xs font-bold hover:border-[#FB923C] hover:text-[#FB923C] tracking-widest">+ 增加一筆</button>
@@ -292,7 +294,7 @@
                         <div class="space-y-8">
                             <div v-for="u in userStatusList" :key="u.id" @click="openUserHistory(u)" class="cursor-pointer group">
                                 <div class="flex justify-between text-xs font-bold mb-2 font-mono">
-                                    <span class="text-slate-500 group-hover:text-slate-800">{{ u.name }}</span>
+                                    <span class="text-slate-500 group-hover:text-slate-800 transition-colors">{{ u.name }}</span>
                                     <span :class="u.balance < 0 ? 'text-[#F43F5E]' : 'text-[#10B981]'">{{ u.balance < 0 ? '' : '+' }}${{ formatCompact(u.balance) }}</span>
                                 </div>
                                 <div class="h-3 w-full bg-slate-100 rounded-full overflow-hidden relative border border-slate-100 shadow-inner">
@@ -428,7 +430,9 @@
                                     <input type="date" v-model="editForm.date" class="bg-white text-xs p-2 rounded w-full text-slate-700 border border-slate-200">
                                     <input type="number" v-model.number="editForm.amount" class="bg-white text-xs p-2 rounded w-full font-mono font-bold text-[#F43F5E] border border-slate-200">
                                  </div>
-                                 <input type="text" v-model="editForm.item" list="common-items" class="bg-white text-xs p-2 rounded w-full text-slate-700 border border-slate-200">
+                                 
+                                 <input type="text" v-model="editForm.category" list="common-items" placeholder="科目" class="bg-white text-xs p-2 rounded w-full font-bold text-slate-600 border border-slate-200 mb-1">
+                                 <input type="text" v-model="editForm.item" placeholder="詳細說明" class="bg-white text-xs p-2 rounded w-full text-slate-700 border border-slate-200">
                                  
                                  <div v-if="getProjectBudgetLines(selectedProject.id).length" class="flex flex-wrap gap-1 mt-1">
                                      <div v-for="line in getProjectBudgetLines(selectedProject.id)" 
@@ -438,7 +442,6 @@
                                          {{ line.category }}
                                      </div>
                                  </div>
-                                 <div v-else class="text-[9px] text-slate-400 mt-2 italic">此專案尚未設定科目</div>
 
                                  <div class="flex gap-2 pt-1">
                                      <button @click="cancelEdit" class="flex-1 py-2 bg-slate-200 rounded text-xs text-slate-500">取消</button>
