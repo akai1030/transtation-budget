@@ -145,7 +145,7 @@
                     <h1 class="text-[10px] tracking-[0.3em] font-bold text-slate-500 uppercase">Financial OS</h1>
                 </div>
                 <h2 class="text-4xl font-serif text-slate-800 leading-none drop-shadow-sm">
-                    轉駅創研 <span class="block text-lg font-sans font-bold text-slate-400 mt-1 tracking-widest">預算帳務系統 v24</span>
+                    轉駅創研 <span class="block text-lg font-sans font-bold text-slate-400 mt-1 tracking-widest">預算帳務系統 v25</span>
                 </h2>
             </div>
             <div class="flex flex-col items-end gap-3">
@@ -258,18 +258,18 @@
                                 </div>
                                 
                                 <div class="mt-2">
-                                    <div v-if="item.projectId && getProjectBudgetLines(item.projectId).length > 0" class="flex flex-wrap gap-2 mb-2">
-                                        <div v-for="line in getProjectBudgetLines(item.projectId)" 
-                                             @click="item.category = line.category"
-                                             class="tag-pill px-3 py-1.5 text-[10px] cursor-pointer"
-                                             :class="item.category === line.category ? 'active' : 'hover:bg-slate-50'">
-                                            {{ line.category }}
-                                        </div>
+                                    <select v-model="item.category" class="w-full bg-white/50 text-sm rounded-xl p-2.5 border border-slate-200 focus:outline-none focus:border-[#FB923C] font-bold text-slate-600 mb-2 appearance-none">
+                                        <option disabled value="">請選擇預算科目...</option>
+                                        <template v-if="item.projectId && getProjectBudgetLines(item.projectId).length > 0">
+                                            <option v-for="line in getProjectBudgetLines(item.projectId)" :value="line.category">{{ line.category }}</option>
+                                        </template>
+                                        <template v-else>
+                                            <option v-for="opt in commonItems" :value="opt">{{ opt }}</option>
+                                        </template>
+                                    </select>
+                                    <div v-if="item.projectId && getProjectBudgetLines(item.projectId).length === 0" class="text-[10px] text-slate-400 mb-2 italic px-1">
+                                        💡 此專案未設定科目，顯示常用項目
                                     </div>
-                                    <div v-else-if="item.projectId" class="text-[10px] text-slate-400 font-bold mb-2 flex items-center gap-1">
-                                        <span>💡</span><span>此專案尚未設定預算科目 (可直接選下方常用項目)</span>
-                                    </div>
-                                    <input type="text" v-model="item.category" list="common-items" placeholder="預算科目 (如: 交通費)" class="w-full bg-white/50 text-sm rounded-xl p-2.5 border border-slate-200 focus:outline-none focus:border-[#FB923C] font-bold text-slate-600 mb-2">
                                 </div>
 
                                 <input type="text" v-model="item.itemName" placeholder="詳細說明 (如: 台北高雄來回高鐵)" class="w-full bg-transparent text-sm border-b border-slate-200 p-2 focus:outline-none focus:border-[#FB923C] font-medium text-slate-700 transition-colors">
@@ -336,10 +336,6 @@
             </transition>
         </main>
 
-        <datalist id="common-items">
-            <option v-for="item in commonItems" :value="item"></option>
-        </datalist>
-
         <div class="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-40 w-[90%] max-w-[360px]">
             <nav class="island-nav">
                 <div class="nav-indicator" :style="indicatorStyle"></div>
@@ -355,10 +351,26 @@
                 <div class="absolute top-0 left-0 w-full h-40 bg-gradient-to-b from-orange-100/60 to-transparent z-0"></div>
                 
                 <div class="p-6 pb-2 border-b border-slate-100 bg-white/80 backdrop-blur-md sticky top-0 z-20">
-                    <div class="flex justify-between items-start mb-1">
+                    
+                    <div v-if="!isEditingProject" class="flex justify-between items-start mb-1">
                         <h2 class="text-2xl font-serif text-slate-800">{{ selectedProject.name }}</h2>
-                        <button @click="selectedProject=null" class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200">×</button>
+                        <div class="flex gap-2">
+                             <button @click="startEditProject" class="w-8 h-8 rounded-full bg-orange-100 text-[#EA580C] flex items-center justify-center text-sm">✏️</button>
+                             <button @click="selectedProject=null" class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200">×</button>
+                        </div>
                     </div>
+                    <div v-else class="space-y-2 mb-2 bg-white/50 p-3 rounded-xl border border-orange-200">
+                        <input type="text" v-model="editProjectForm.name" class="w-full text-lg font-bold bg-white p-1 rounded border border-slate-200">
+                        <div class="flex gap-2">
+                            <input type="number" v-model.number="editProjectForm.budget" class="w-full text-sm font-mono bg-white p-1 rounded border border-slate-200" placeholder="總預算">
+                            <input type="number" v-model.number="editProjectForm.retention" class="w-20 text-sm font-mono text-center bg-white p-1 rounded border border-slate-200" placeholder="抽成%">
+                        </div>
+                        <div class="flex gap-2 mt-2">
+                             <button @click="isEditingProject=false" class="flex-1 py-1 bg-slate-200 rounded text-xs">取消</button>
+                             <button @click="saveEditProject" class="flex-1 py-1 bg-[#FB923C] text-white rounded text-xs font-bold">儲存</button>
+                        </div>
+                    </div>
+
                     <div class="flex gap-2 mt-4">
                         <div @click="subTab='overview'" class="pill-tab" :class="{active: subTab==='overview'}">概況 Status</div>
                         <div @click="subTab='history'" class="pill-tab" :class="{active: subTab==='history'}">收支 Records</div>
@@ -373,11 +385,19 @@
                                 <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest">預算剩餘量</h4>
                                 <button @click="showAddBudgetLine=!showAddBudgetLine" class="text-[10px] bg-slate-100 text-slate-600 px-3 py-1 rounded-full font-bold">+ 新增科目</button>
                             </div>
-                            <div v-if="showAddBudgetLine" class="mb-4 bg-white p-3 rounded-xl flex gap-2 border border-slate-100 shadow-sm animate-[modalFloat_0.2s]">
-                                <input type="text" v-model="newBudget.category" placeholder="科目" class="bg-slate-50 rounded-lg px-2 py-2 text-xs w-1/3 outline-none border border-slate-200">
-                                <input type="number" v-model.number="newBudget.amount" placeholder="$" class="bg-slate-50 rounded-lg px-2 py-2 text-xs flex-1 outline-none font-mono border border-slate-200">
-                                <button @click="addBudgetLine" class="text-xs font-bold px-3 bg-[#FB923C] text-white rounded-lg">OK</button>
+                            
+                            <div v-if="showAddBudgetLine" class="mb-4 bg-white p-4 rounded-xl space-y-3 border border-slate-100 shadow-sm animate-[modalFloat_0.2s]">
+                                <div class="flex justify-between text-[10px] text-slate-400 font-mono border-b border-slate-50 pb-2">
+                                    <span>可分配總額: ${{ formatCompact(selectedProject.safeBudget) }}</span>
+                                    <span :class="remainingBudget < 0 ? 'text-red-500 font-bold' : 'text-[#10B981]'">剩餘: ${{ (remainingBudget - (newBudget.amount||0)).toLocaleString() }}</span>
+                                </div>
+                                <div class="flex gap-2">
+                                    <input type="text" v-model="newBudget.category" placeholder="科目" class="bg-slate-50 rounded-lg px-2 py-2 text-xs w-1/3 outline-none border border-slate-200">
+                                    <input type="number" v-model.number="newBudget.amount" placeholder="$" class="bg-slate-50 rounded-lg px-2 py-2 text-xs flex-1 outline-none font-mono border border-slate-200" :class="(remainingBudget - newBudget.amount) < 0 ? 'text-red-500 font-bold' : ''">
+                                    <button @click="addBudgetLine" class="text-xs font-bold px-3 bg-[#FB923C] text-white rounded-lg">OK</button>
+                                </div>
                             </div>
+
                             <div class="space-y-5">
                                 <div v-for="line in selectedProject.budgetLines" :key="line.category">
                                     <div class="flex justify-between mb-2 text-xs">
@@ -431,18 +451,12 @@
                                     <input type="number" v-model.number="editForm.amount" class="bg-white text-xs p-2 rounded w-full font-mono font-bold text-[#F43F5E] border border-slate-200">
                                  </div>
                                  
-                                 <input type="text" v-model="editForm.category" list="common-items" placeholder="科目" class="bg-white text-xs p-2 rounded w-full font-bold text-slate-600 border border-slate-200 mb-1">
+                                 <select v-model="editForm.category" class="w-full bg-white text-xs p-2 rounded border border-slate-200 mb-1">
+                                     <option v-for="opt in (getProjectBudgetLines(selectedProject.id).length ? getProjectBudgetLines(selectedProject.id).map(l=>l.category) : commonItems)" :value="opt">{{ opt }}</option>
+                                 </select>
+                                 
                                  <input type="text" v-model="editForm.item" placeholder="詳細說明" class="bg-white text-xs p-2 rounded w-full text-slate-700 border border-slate-200">
                                  
-                                 <div v-if="getProjectBudgetLines(selectedProject.id).length" class="flex flex-wrap gap-1 mt-1">
-                                     <div v-for="line in getProjectBudgetLines(selectedProject.id)" 
-                                          @click="editForm.category = line.category"
-                                          class="text-[9px] px-2 py-1 rounded cursor-pointer border"
-                                          :class="editForm.category === line.category ? 'bg-orange-100 border-orange-200 text-orange-600' : 'bg-white border-slate-100 text-slate-500'">
-                                         {{ line.category }}
-                                     </div>
-                                 </div>
-
                                  <div class="flex gap-2 pt-1">
                                      <button @click="cancelEdit" class="flex-1 py-2 bg-slate-200 rounded text-xs text-slate-500">取消</button>
                                      <button @click="saveEdit(tx)" class="flex-1 py-2 bg-[#FB923C] text-white rounded text-xs font-bold">儲存</button>
@@ -503,7 +517,9 @@
                                 <input type="date" v-model="editForm.date" class="bg-white text-xs p-2 rounded w-full text-slate-700 border border-slate-200">
                                 <input type="number" v-model.number="editForm.amount" class="bg-white text-xs p-2 rounded w-full font-mono font-bold text-[#F43F5E] border border-slate-200">
                              </div>
-                             <input type="text" v-model="editForm.item" list="common-items" class="bg-white text-xs p-2 rounded w-full text-slate-700 border border-slate-200">
+                             <select v-model="editForm.category" class="w-full bg-white text-xs p-2 rounded border border-slate-200 mb-1">
+                                 <option v-for="opt in commonItems" :value="opt">{{ opt }}</option>
+                             </select>
                              <div class="flex gap-2 pt-1">
                                  <button @click="cancelEdit" class="flex-1 py-2 bg-slate-200 rounded text-xs text-slate-500">取消</button>
                                  <button @click="saveEdit(tx)" class="flex-1 py-2 bg-[#FB923C] text-white rounded text-xs font-bold">儲存</button>
@@ -536,7 +552,6 @@
                 const projectStats = ref({});
                 const allTransactions = ref([]); 
                 
-                // NEW: 常用清單
                 const commonItems = ref([]);
 
                 const form = ref({ date: new Date().toISOString().split('T')[0], payer: '', items: [{projectId:'',amount:'',itemName:'',category:''}] });
@@ -548,6 +563,8 @@
                 
                 const editingTx = ref(null);
                 const editForm = ref({});
+                const isEditingProject = ref(false);
+                const editProjectForm = ref({});
                 
                 const showTransferModal = ref(false);
                 const selectedUser = ref(null);
@@ -560,6 +577,13 @@
                 });
 
                 const newProjTotal = computed(() => newProj.value.terms.reduce((acc, curr) => acc + (Number(curr.amount)||0), 0));
+                
+                // 計算剩餘可分配金額
+                const remainingBudget = computed(() => {
+                    if (!selectedProject.value) return 0;
+                    const allocated = selectedProject.value.budgetLines.reduce((sum, line) => sum + line.budget, 0);
+                    return selectedProject.value.safeBudget - allocated;
+                });
 
                 onMounted(() => {
                     loadData();
@@ -580,7 +604,7 @@
                         projects.value = data.projects;
                         projectStats.value = data.projectStats;
                         allTransactions.value = data.allTransactions;
-                        commonItems.value = data.commonItems || []; // 載入清單
+                        commonItems.value = data.commonItems || [];
                         
                         if(currentUser.value) currentUser.value = users.value.find(x => x.name === currentUser.value.name) || currentUser.value;
                         if(selectedProject.value) selectedProject.value = { ...projectStats.value[selectedProject.value.id], id: selectedProject.value.id };
@@ -658,6 +682,16 @@
                 const openProjectDetail = (stat, pid) => { selectedProject.value = { id: pid, ...stat }; subTab.value = 'overview'; };
                 const getProjectHistory = (pid) => allTransactions.value.filter(tx => tx.projectId === pid).sort((a,b)=>new Date(b.date)-new Date(a.date));
 
+                // 專案編輯功能
+                const startEditProject = () => { editProjectForm.value = { ...selectedProject.value }; isEditingProject.value = true; };
+                const saveEditProject = async () => {
+                    if(await apiCall({ action: 'editProject', ...editProjectForm.value })) {
+                         isEditingProject.value = false;
+                         // 更新 selectedProject 資料
+                         selectedProject.value = { ...selectedProject.value, ...editProjectForm.value };
+                    }
+                };
+
                 return {
                     currentUser, tempUser, loading, isSubmitting, tab, subTab, autoRefreshTimer,
                     users, projects, projectStats, userStatusList, maxUserBalance, globalStats,
@@ -667,7 +701,9 @@
                     confirmIdentity, formatCompact, submitExpense, submitTransfer, createProject,
                     openUserHistory, getUserHistory, openProjectDetail, getProjectHistory,
                     addBudgetLine, getProjectBudgetLines, confirmIncome, deleteTransaction, loadData, forceRefresh,
-                    startEdit, cancelEdit, saveEdit
+                    startEdit, cancelEdit, saveEdit,
+                    // New
+                    remainingBudget, isEditingProject, editProjectForm, startEditProject, saveEditProject
                 };
             }
         }).mount('#app');
