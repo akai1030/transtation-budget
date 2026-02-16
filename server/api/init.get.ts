@@ -171,6 +171,8 @@ export default defineEventHandler(async (event) => {
         throw createError({
             statusCode: 500,
             statusMessage: 'Failed to fetch initial data',
+            message: e instanceof Error ? e.message : String(e),
+            data: e // Expose full error object for debugging
         })
     }
 })
