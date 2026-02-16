@@ -51,8 +51,8 @@
         </div>
       </header>
 
-      <!-- 1. 金額輸入卡片 — 進場動畫 #2 -->
-      <div class="stagger-item card-organic" style="--delay: 1">
+      <!-- 1. 金額輸入卡片 -->
+      <div class="stagger-item bg-white rounded-[28px] p-5 shadow-sm border border-[#E8E2D8] relative overflow-hidden" style="--delay: 1">
         <!-- 卡片裝飾圓點 -->
         <div class="absolute top-3 right-3 w-2 h-2 rounded-full bg-[#1B4588] opacity-40"></div>
         
@@ -90,9 +90,9 @@
         </Transition>
       </div>
 
-      <!-- 2. 專案 & 子專案 — 進場動畫 #3 -->
-      <div class="stagger-item card-organic" style="--delay: 2">
-        <div class="section-label">專案 / 子專案</div>
+      <!-- 2. 專案 & 子專案 -->
+      <div class="stagger-item bg-white rounded-[28px] p-5 shadow-sm border border-[#E8E2D8] relative overflow-hidden" style="--delay: 2">
+        <div class="text-[10px] font-bold text-[#a09888] uppercase tracking-[0.2em] mb-3">專案 / 子專案</div>
         
         <!-- 專案選擇 -->
         <div class="relative mb-3">
@@ -106,14 +106,14 @@
 
         <!-- 子專案 pill -->
         <div v-if="selectedProjectId && budgetLines.length > 0">
-          <div class="section-label-sm">預算分支</div>
+          <div class="text-[10px] font-bold text-[#a09888] uppercase tracking-[0.2em] mb-1.5">預算分支</div>
           <div class="flex flex-wrap gap-2">
             <button v-for="line in budgetLines" :key="line.category"
               @click="selectedBranch = line.category"
-              class="pill-btn"
+              class="px-3.5 py-2 rounded-full text-xs font-bold transition-all border"
               :class="selectedBranch === line.category 
-                ? 'pill-active' 
-                : 'pill-default'">
+                ? 'bg-[#1B4588] text-white border-[#1B4588] shadow-md shadow-[#1B4588]/15' 
+                : 'bg-[#F0ECE6] border-[#E8E2D8] text-[#6b6050] hover:border-[#1B4588]/30'">
               {{ line.category }}
               <span class="ml-1 opacity-50 font-mono text-[10px]">
                 {{ formatCompact(line.budget - line.used) }}
@@ -134,22 +134,22 @@
         </div>
       </div>
 
-      <!-- 3. 會計科目 — 進場動畫 #4 -->
-      <div class="stagger-item card-organic" style="--delay: 3">
-        <div class="section-label">會計科目</div>
+      <!-- 3. 會計科目 -->
+      <div class="stagger-item bg-white rounded-[28px] p-5 shadow-sm border border-[#E8E2D8] relative overflow-hidden" style="--delay: 3">
+        <div class="text-[10px] font-bold text-[#a09888] uppercase tracking-[0.2em] mb-3">會計科目</div>
         <div class="flex flex-wrap gap-2">
           <button v-for="cat in allCategories" :key="cat"
             @click="selectedCategory = cat"
-            class="pill-btn"
+            class="px-3.5 py-2 rounded-full text-xs font-bold transition-all border"
             :class="selectedCategory === cat 
-              ? 'pill-active-accent' 
-              : 'pill-default'">
+              ? 'bg-[#1B4588] text-white border-[#1B4588] shadow-md shadow-[#1B4588]/15' 
+              : 'bg-[#F0ECE6] border-[#E8E2D8] text-[#6b6050] hover:border-[#1B4588]/30'">
             {{ cat }}
           </button>
 
           <!-- 新增科目 -->
           <button v-if="!showCustomInput" @click="showCustomInput = true"
-            class="pill-btn border-dashed !border-[#D4CEC3] text-[#b5aa9a] hover:border-[#1B4588] hover:text-[#1B4588] transition-colors flex items-center gap-1">
+            class="px-3.5 py-2 rounded-full text-xs font-bold transition-all border border-dashed !border-[#D4CEC3] text-[#b5aa9a] hover:border-[#1B4588] hover:text-[#1B4588] flex items-center gap-1">
             <PhPlus class="text-[10px]" />
             自訂
           </button>
@@ -173,19 +173,19 @@
         </div>
       </div>
 
-      <!-- 4. 備註 & 日期 — 進場動畫 #5 -->
+      <!-- 4. 備註 & 日期 -->
       <div class="stagger-item grid grid-cols-3 gap-3" style="--delay: 4">
         <!-- 備註 -->
-        <div class="col-span-2 card-organic !py-3.5">
-          <div class="section-label-sm">備註</div>
+        <div class="col-span-2 bg-white rounded-[28px] p-5 !py-3.5 shadow-sm border border-[#E8E2D8] relative overflow-hidden">
+          <div class="text-[10px] font-bold text-[#a09888] uppercase tracking-[0.2em] mb-1.5">備註</div>
           <input type="text" v-model="note" 
             placeholder="例：高鐵到台北"
             class="w-full bg-transparent text-sm font-medium text-[#1B4588] outline-none placeholder:text-[#c4baa8]" />
         </div>
 
         <!-- 日期 -->
-        <div class="card-organic !py-3.5 relative">
-          <div class="section-label-sm">日期</div>
+        <div class="bg-white rounded-[28px] p-5 !py-3.5 shadow-sm border border-[#E8E2D8] relative overflow-hidden">
+          <div class="text-[10px] font-bold text-[#a09888] uppercase tracking-[0.2em] mb-1.5">日期</div>
           <div class="flex items-center gap-1.5">
             <PhCalendarBlank class="text-[#a09888] text-sm flex-shrink-0" />
             <span class="text-sm font-bold text-[#1B4588] font-mono">{{ shortDate }}</span>
@@ -435,36 +435,6 @@ const submit = async () => {
 </script>
 
 <style scoped>
-/* ── 品牌卡片樣式 ── */
-.card-organic {
-  @apply bg-white rounded-[28px] p-5 shadow-sm border border-[#E8E2D8] relative overflow-hidden;
-}
-
-/* ── 標籤樣式 ── */
-.section-label {
-  @apply text-[10px] font-bold text-[#a09888] uppercase tracking-[0.2em] mb-3;
-}
-.section-label-sm {
-  @apply text-[10px] font-bold text-[#a09888] uppercase tracking-[0.2em] mb-1.5;
-}
-
-/* ── Pill 按鈕 ── */
-.pill-btn {
-  @apply px-3.5 py-2 rounded-full text-xs font-bold transition-all border;
-}
-.pill-default {
-  @apply bg-[#F0ECE6] border-[#E8E2D8] text-[#6b6050];
-}
-.pill-default:hover {
-  @apply border-[#1B4588]/30;
-}
-.pill-active {
-  @apply bg-[#1B4588] text-white border-[#1B4588] shadow-md shadow-[#1B4588]/15;
-}
-.pill-active-accent {
-  @apply bg-[#1B4588] text-white border-[#1B4588] shadow-md shadow-[#1B4588]/15;
-}
-
 /* ── 進場交錯動畫 ── */
 .stagger-item {
   opacity: 0;
