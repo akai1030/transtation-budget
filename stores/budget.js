@@ -209,6 +209,30 @@ export const useBudgetStore = defineStore('budget', {
             }
         },
 
+        // 公司撥款/還款給使用者
+        async transferToUser(payload) {
+            this.isSyncing = true;
+            this.error = null;
+            try {
+                // payload: { toUser, amount, date, description, type }
+                await $fetch(`${API_BASE}/transactions`, {
+                    method: 'POST',
+                    body: {
+                        action: 'transfer',
+                        ...payload
+                    }
+                });
+                await this.loadData(true);
+            } catch (err) {
+                console.error('Transfer failed:', err);
+                const apiError = err.data?.message || err.message || JSON.stringify(err);
+                this.error = `轉帳失敗: ${apiError}`;
+                throw err;
+            } finally {
+                this.isSyncing = false;
+            }
+        },
+
         // 復原上一筆交易
         async undoLastTransaction() {
             if (!this.lastAddedTxIds.length) return;

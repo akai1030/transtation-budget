@@ -109,6 +109,15 @@
                   :style="{ width: (Math.abs(user.pettyCash) / Math.max(maxAbsBalance, 1)) * 100 + '%' }">
                 </div>
               </div>
+
+              
+              <!-- 撥款/還款按鈕 -->
+              <button @click.stop="openTransferModal(user)" 
+                class="mt-3 text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 ml-auto transition-colors border shadow-sm"
+                :class="user.pettyCash < 0 ? 'bg-amber-50 text-amber-600 border-amber-200 hover:bg-amber-100' : 'bg-[#F0ECE6] text-[#6b6050] border-[#E8E2D8] hover:bg-[#E8E2D8]'">
+                 <PhArrowsLeftRight weight="bold" />
+                 {{ user.pettyCash < 0 ? '還款' : '撥款' }}
+              </button>
             </div>
           </div>
         </div>
@@ -161,16 +170,130 @@
          </div>
        </Transition>
     </Teleport>
+
+    <!-- 撥款/還款 Modal -->
+    <Teleport to="body">
+      <Transition name="fade">
+        <div v-if="showTransferModal" class="fixed inset-0 z-[60] flex items-center justify-center px-4">
+          <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="closeTransferModal"></div>
+          <div class="bg-white w-full max-w-sm rounded-[28px] shadow-2xl p-6 relative z-10 space-y-6">
+            
+            <div class="text-center">
+              <h3 class="text-xl font-bold text-[#1B4588]">
+                {{ transferForm.type === 'reimburse' ? '還款給成員' : '撥補零用金' }}
+              </h3>
+              <p class="text-xs text-[#a09888] mt-1">{{ transferForm.user?.name }}</p>
+            </div>
+
+            <!-- 切換類型 -->
+            <div class="flex bg-[#F0ECE6] p-1 rounded-xl">
+               <button class="flex-1 py-2 rounded-lg text-sm font-bold transition-all"
+                 :class="transferForm.type === 'topup' ? 'bg-white text-[#1B4588] shadow-sm' : 'text-[#a09888]'"
+                 @click="transferForm.type = 'topup'">
+                 撥補 (給錢)
+               </button>
+               <button class="flex-1 py-2 rounded-lg text-sm font-bold transition-all"
+                 :class="transferForm.type === 'reimburse' ? 'bg-white text-emerald-600 shadow-sm' : 'text-[#a09888]'"
+                 @click="transferForm.type = 'reimburse'">
+                 還款 (清償)
+               </button>
+            </div>
+
+            <div class="space-y-4">
+              <!-- 金額 -->
+              <div>
+                <label class="block text-xs font-bold text-[#a09888] mb-1 pl-1">金額</label>
+                <div class="relative">
+                   <div class="absolute left-4 top-1/2 -translate-y-1/2 text-[#1B4588] font-bold text-lg">$</div>
+                   <input v-model="transferForm.amount" type="number" 
+                     class="w-full bg-[#F5F5F0] border border-[#E8E2D8] rounded-xl py-3 pl-8 pr-4 text-lg font-bold text-[#1B4588] focus:outline-none focus:border-[#1B4588]"
+                     placeholder="0" />
+                </div>
+              </div>
+
+               <!-- 日期 -->
+               <div>
+                 <label class="block text-xs font-bold text-[#a09888] mb-1 pl-1">日期</label>
+                 <input v-model="transferForm.date" type="date" 
+                   class="w-full bg-[#F5F5F0] border border-[#E8E2D8] rounded-xl px-4 py-3 font-bold text-[#6b6050] focus:outline-none focus:border-[#1B4588]" />
+               </div>
+
+               <!-- 備註 -->
+               <div>
+                  <label class="block text-xs font-bold text-[#a09888] mb-1 pl-1">備註 (選填)</label>
+                  <input v-model="transferForm.description" type="text" 
+                    class="w-full bg-[#F5F5F0] border border-[#E8E2D8] rounded-xl px-4 py-3 text-sm font-medium text-[#6b6050] focus:outline-none focus:border-[#1B4588]"
+                    :placeholder="transferForm.type === 'reimburse' ? '例如：結清代墊款' : '例如：預支零用金'" />
+               </div>
+            </div>
+
+            <!-- 按鈕 -->
+            <div class="grid grid-cols-2 gap-3 pt-2">
+               <button @click="closeTransferModal" class="py-3.5 rounded-xl font-bold text-[#a09888] hover:bg-[#F0ECE6]">取消</button>
+               <button @click="submitTransfer" 
+                 :disabled="!transferForm.amount"
+                 class="py-3.5 rounded-xl font-bold text-white shadow-lg shadow-[#1B4588]/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                 :class="transferForm.type === 'reimburse' ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-[#1B4588] hover:bg-[#2D5FA0]'">
+                 確認{{ transferForm.type === 'reimburse' ? '還款' : '撥款' }}
+               </button>
+            </div>
+
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
 <script setup>
 import { computed, ref } from 'vue';
-import { PhCaretLeft } from '@phosphor-icons/vue';
+import { PhCaretLeft, PhArrowsLeftRight } from '@phosphor-icons/vue';
 
 const store = useBudgetStore();
 const selectedUser = ref(null);
 const selectedTransaction = ref(null);
+
+// 撥款/還款 Modal 狀態
+const showTransferModal = ref(false);
+const transferForm = ref({
+    user: null,
+    type: 'topup',
+    amount: '',
+    date: new Date().toISOString().split('T')[0],
+    description: ''
+});
+
+const openTransferModal = (user) => {
+    transferForm.value = {
+        user: user,
+        type: user.pettyCash < 0 ? 'reimburse' : 'topup',
+        amount: user.pettyCash < 0 ? Math.abs(user.pettyCash) : '',
+        date: new Date().toISOString().split('T')[0],
+        description: ''
+    };
+    showTransferModal.value = true;
+};
+
+const closeTransferModal = () => {
+    showTransferModal.value = false;
+};
+
+const submitTransfer = async () => {
+    if (!transferForm.value.amount || !transferForm.value.user) return;
+    
+    try {
+        await store.transferToUser({
+            toUser: transferForm.value.user.name,
+            amount: transferForm.value.amount,
+            date: transferForm.value.date,
+            description: transferForm.value.description,
+            type: transferForm.value.type
+        });
+        closeTransferModal();
+    } catch (e) {
+        alert('轉帳失敗，請稍後再試');
+    }
+};
 
 definePageMeta({ layout: 'default' });
 
