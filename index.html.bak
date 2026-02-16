@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>轉駅創研 | 預算帳務系統</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.tailwindcss.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap"
+        rel="stylesheet">
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        :root {
+            --c-bg: #F9F7F5;
+            --c-glass: rgba(255, 255, 255, 0.65);
+            --c-text-main: #334155;
+            --c-orange: #FB923C;
+            --c-green: #10B981;
+            --c-red: #F43F5E;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--c-bg);
+            color: var(--c-text-main);
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+            min-height: 100vh;
+        }
+
+        .film-grain {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 9999;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
+            mix-blend-mode: multiply;
+            opacity: 0.3;
+        }
+
+        .ambient-light {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: -1;
+            animation: drift 25s infinite alternate ease-in-out;
+            mix-blend-mode: multiply;
+        }
+
+        .light-1 {
+            top: -10%;
+            left: -10%;
+            width: 90vw;
+            height: 90vw;
+            background: radial-gradient(circle, #FFedd5, transparent);
+            opacity: 0.8;
+            animation-duration: 30s;
+        }
+
+        .light-2 {
+            bottom: -20%;
+            right: -20%;
+            width: 100vw;
+            height: 100vw;
+            background: radial-gradient(circle, #E0F2FE, transparent);
+            opacity: 0.7;
+            animation-delay: -5s;
+        }
+
+        @keyframes drift {
+            0% {
+                transform: translate(0, 0) rotate(0deg);
+            }
+
+            100% {
+                transform: translate(-30px, 40px) rotate(10deg);
+            }
+        }
+
+        .glass-panel {
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.4));
+            backdrop-filter: blur(40px);
+            border: 1px solid white;
+            box-shadow: 0 20px 40px -10px rgba(189, 195, 215, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+            border-radius: 32px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .glass-panel:active {
+            transform: scale(0.98);
+        }
+
+        .btn-campfire {
+            background: linear-gradient(135deg, #FB923C 0%, #EA580C 100%);
+            color: white;
+            border-radius: 24px;
+            font-weight: 700;
+            box-shadow: 0 10px 25px -5px rgba(249, 115, 22, 0.4);
+            border: none;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s;
+        }
+
+        .btn-campfire:active {
+            transform: scale(0.95);
+        }
+
+        .clean-input {
+            background: rgba(255, 255, 255, 0.5);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            border-radius: 20px;
+            padding: 16px 20px;
+            color: var(--c-text-main);
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .clean-input:focus {
+            outline: none;
+            background: #FFF;
+            box-shadow: 0 0 0 4px rgba(251, 146, 60, 0.15);
+        }
+
+        .island-nav {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(20px);
+            border: 1px solid white;
+            border-radius: 100px;
+            padding: 6px;
+            display: flex;
+            justify-content: space-between;
+            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-item {
+            flex: 1;
+            text-align: center;
+            padding: 12px 0;
+            color: #94A3B8;
+            font-size: 0.85rem;
+            font-weight: 700;
+            border-radius: 99px;
+            position: relative;
+            z-index: 1;
+            transition: color 0.3s;
+        }
+
+        .nav-item.active {
+            color: #334155;
+        }
+
+        .nav-indicator {
+            position: absolute;
+            top: 6px;
+            bottom: 6px;
+            z-index: 0;
+            background: #F1F5F9;
+            border-radius: 99px;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .chart-circle {
+            transition: stroke-dasharray 1s ease-in-out;
+        }
+
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .modal-enter {
+            animation: modalFloat 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes modalFloat {
+            from {
+                opacity: 0;
+                transform: translateY(60px) scale(0.9);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .loader {
+            width: 48px;
+            height: 48px;
+            border: 4px solid #E2E8F0;
+            border-radius: 50%;
+            display: inline-block;
+            position: relative;
+            animation: rotation 1s linear infinite;
+        }
+
+        .loader::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: 4px solid transparent;
+            border-top-color: var(--c-orange);
+        }
+
+        @keyframes rotation {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .pill-tab {
+            padding: 6px 16px;
+            border-radius: 99px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #94A3B8;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .pill-tab.active {
+            background: #334155;
+            color: white;
+            box-shadow: 0 4px 12px -2px rgba(51, 65, 85, 0.3);
+        }
+
+        .tag-pill {
+            background: #FFF;
+            border: 1px solid #E2E8F0;
+            color: #64748B;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .tag-pill.active {
+            background: #FFF7ED;
+            border-color: #FB923C;
+            color: #EA580C;
+            box-shadow: 0 4px 12px -2px rgba(251, 146, 60, 0.2);
+        }
+
+        /* Toast Notification */
+        .toast-container {
+            position: fixed;
+            bottom: 90px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            pointer-events: none;
+            width: 90%;
+            max-width: 320px;
+        }
+
+        .toast {
+            background: rgba(30, 41, 59, 0.9);
+            backdrop-filter: blur(12px);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-align: center;
+            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.3);
+            animation: toastUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            pointer-events: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .toast.success {
+            background: rgba(16, 185, 129, 0.9);
+            color: white;
+        }
+
+        .toast.error {
+            background: rgba(244, 63, 94, 0.9);
+            color: white;
+        }
+
+        @keyframes toastUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px) scale(0.9);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+    </style>
+</head>
+
+<body class="flex flex-col items-center p-4 sm:p-6 pb-32">
+
+    <div class="film-grain"></div>
+    <div class="ambient-light light-1"></div>
+    <div class="ambient-light light-2"></div>
+
+    <div id="app" class="w-full max-w-lg relative z-10">
+
+        <div v-if="isSubmitting"
+            class="fixed inset-0 z-[999] bg-white/80 backdrop-blur-xl flex flex-col items-center justify-center">
+            <span class="loader mb-6"></span>
+            <div class="text-xl italic text-slate-500">Writing to cloud...</div>
+        </div>
+
+        <div v-if="!loading && !currentUser && !isSubmitting"
+            class="fixed inset-0 z-50 flex items-center justify-center p-6 bg-white/60 backdrop-blur-md">
+            <div class="glass-panel p-10 w-full max-w-xs text-center modal-enter shadow-2xl">
+                <div
+                    class="w-20 h-20 bg-gradient-to-br from-orange-100 to-white rounded-full mx-auto mb-6 flex items-center justify-center text-4xl shadow-inner border border-white">
+                    🗻</div>
+                <h3 class="text-3xl font-bold text-slate-800 mb-2">TranStation</h3>
+                <p class="text-xs font-mono text-slate-400 mb-10 tracking-[0.2em] uppercase">Creative Research Lab</p>
+                <div class="relative group">
+                    <select v-model="tempUser"
+                        class="appearance-none w-full bg-white border border-slate-200 rounded-2xl py-4 px-6 text-center text-lg text-slate-700 outline-none font-bold shadow-sm">
+                        <option disabled value="">- 選擇夥伴 -</option>
+                        <option v-for="u in users" :key="u.id" :value="u">{{ u.name }}</option>
+                    </select>
+                </div>
+                <button @click="confirmIdentity" :disabled="!tempUser"
+                    class="w-full btn-campfire py-4 text-lg mt-8 shadow-xl hover:scale-[1.02]">登入系統</button>
+            </div>
+        </div>
+
+        <header class="flex justify-between items-end mb-8 px-2 mt-8">
+            <div class="animate-[modalFloat_0.6s]">
+                <div class="flex items-center gap-2 mb-2 opacity-80">
+                    <span class="w-2 h-2 rounded-full bg-[#FB923C]"></span>
+                    <h1 class="text-[10px] tracking-[0.3em] font-bold text-slate-500 uppercase">Financial OS</h1>
+                </div>
+                <h2 class="text-4xl font-bold text-slate-800 leading-none drop-shadow-sm">
+                    轉駅創研 <span class="block text-lg font-sans font-bold text-slate-400 mt-1 tracking-widest">預算帳務系統
+                        v26</span>
+                </h2>
+            </div>
+            <div class="flex flex-col items-end gap-3">
+                <button @click="forceRefresh"
+                    class="w-12 h-12 rounded-full bg-white/60 hover:bg-white backdrop-blur-md flex items-center justify-center border border-white shadow-sm transition-all group">
+                    <span class="group-hover:rotate-180 transition-transform duration-700 text-slate-500">↻</span>
+                </button>
+                <div v-if="currentUser"
+                    class="px-4 py-1.5 bg-white/60 backdrop-blur-md border border-white text-slate-600 rounded-full text-xs font-bold font-mono flex items-center gap-2 shadow-sm">
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#10B981] animate-pulse"></span>
+                    {{ currentUser.name }}
+                </div>
+            </div>
+        </header>
+
+        <main class="flex flex-col gap-6 relative min-h-[600px]">
+
+            <div class="glass-panel p-6 flex items-center justify-between relative overflow-hidden">
+                <div class="absolute -right-10 -top-10 w-40 h-40 bg-orange-50 rounded-full blur-3xl z-0"></div>
+                <div class="relative w-36 h-36 flex-shrink-0 z-10">
+                    <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                        <circle cx="50" cy="50" r="40" stroke="#F1F5F9" stroke-width="12" fill="none" />
+                        <circle cx="50" cy="50" r="40" stroke="#10B981" stroke-width="12" fill="none"
+                            :stroke-dasharray="251"
+                            :stroke-dashoffset="251 - (251 * (Math.min(globalStats.revenue / Math.max(globalStats.totalBudget, 1), 1)))"
+                            stroke-linecap="round" class="chart-circle" />
+                        <circle cx="50" cy="50" r="32" stroke="#F43F5E" stroke-width="6" fill="none"
+                            :stroke-dasharray="200"
+                            :stroke-dashoffset="200 - (200 * (Math.min(globalStats.expense / Math.max(globalStats.totalBudget, 1), 1)))"
+                            stroke-linecap="round" class="chart-circle opacity-80" />
+                    </svg>
+                    <div class="absolute inset-0 flex flex-col items-center justify-center">
+                        <span class="text-[9px] text-slate-400 uppercase tracking-widest font-bold">Liquid</span>
+                        <span class="text-lg font-mono font-bold text-slate-700">${{ formatCompact(globalStats.cash)
+                            }}</span>
+                    </div>
+                </div>
+                <div class="flex-1 pl-6 space-y-4 z-10">
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center gap-2"><span
+                                class="w-2 h-2 rounded-full bg-slate-200"></span><span
+                                class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">預計營收</span></div>
+                        <div class="font-mono font-bold text-slate-400">${{ formatCompact(globalStats.totalBudget) }}
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center gap-2"><span
+                                class="w-2 h-2 rounded-full bg-[#10B981]"></span><span
+                                class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">實際入帳</span></div>
+                        <div class="font-mono font-bold text-[#10B981]">${{ formatCompact(globalStats.revenue) }}</div>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center gap-2"><span
+                                class="w-2 h-2 rounded-full bg-[#F43F5E]"></span><span
+                                class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">已經支出</span></div>
+                        <div class="font-mono font-bold text-[#F43F5E]">${{ formatCompact(globalStats.expense) }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <transition name="fade" mode="out-in">
+
+                <div v-if="tab==='dashboard'" class="space-y-5 pb-24">
+                    <div v-for="(stat, pid) in projectStats" :key="pid" @click="openProjectDetail(stat, pid)"
+                        class="glass-panel p-6 cursor-pointer hover:bg-white/80 transition-all duration-300 group border-l-4 border-l-transparent hover:border-l-[#FB923C]">
+                        <div class="flex justify-between items-start mb-6">
+                            <div>
+                                <h3
+                                    class="text-2xl font-bold text-slate-800 mb-1 group-hover:text-[#FB923C] transition-colors">
+                                    {{ stat.name }}</h3>
+                                <span
+                                    class="inline-block px-2 py-1 bg-slate-100 rounded-md text-[10px] font-mono text-slate-500">抽成
+                                    {{ stat.retentionRate }}%</span>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-[10px] font-mono text-slate-400 uppercase tracking-widest mb-1">Safe
+                                    Budget</div>
+                                <div class="text-xl font-mono font-bold text-slate-700">${{
+                                    formatCompact(stat.safeBalance) }}</div>
+                            </div>
+                        </div>
+                        <div class="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden flex">
+                            <div class="h-full bg-[#F43F5E]"
+                                :style="{width: Math.min((stat.totalExpense/stat.safeBudget)*100, 100) + '%'}"></div>
+                        </div>
+                        <div class="flex justify-between items-center pt-3 mt-2">
+                            <div class="text-[10px] font-bold text-slate-400">現金流 (Cash Flow)</div>
+                            <div class="text-sm font-mono font-bold"
+                                :class="stat.cashBalance < 0 ? 'text-[#F43F5E]' : 'text-[#10B981]'">
+                                {{ stat.cashBalance < 0 ? '−' : '+' }}${{ formatCompact(Math.abs(stat.cashBalance)) }}
+                                    </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div v-else-if="tab==='expense'" class="glass-panel p-6 pb-24 border-t-4 border-t-[#FB923C]">
+                        <div class="flex items-center gap-3 mb-6">
+                            <span class="text-2xl p-2 bg-orange-100 rounded-full">✍️</span>
+                            <h3 class="text-xl font-bold text-slate-800">新增支出紀錄</h3>
+                        </div>
+                        <div class="space-y-5">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="space-y-1">
+                                    <label class="text-[10px] font-bold text-slate-400 uppercase pl-1">日期</label>
+                                    <input type="date" v-model="form.date" class="clean-input w-full font-mono text-sm">
+                                </div>
+                                <div class="space-y-1">
+                                    <label class="text-[10px] font-bold text-slate-400 uppercase pl-1">付款人</label>
+                                    <select v-model="form.payer"
+                                        class="clean-input w-full text-sm font-bold text-[#EA580C]">
+                                        <option v-for="u in users" :value="u.name">{{ u.name }}</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="h-px bg-slate-100 w-full"></div>
+                            <div v-for="(item, idx) in form.items" :key="idx" class="animate-[modalFloat_0.3s]">
+                                <div
+                                    class="relative bg-white/40 p-5 rounded-2xl border border-white space-y-4 hover:shadow-md transition-all">
+                                    <button v-if="form.items.length>1" @click="form.items.splice(idx,1)"
+                                        class="absolute top-2 right-2 text-slate-300 hover:text-[#F43F5E] text-lg transition-colors">×</button>
+
+                                    <div class="flex gap-3 mb-2">
+                                        <div class="flex-[2]">
+                                            <select v-model="item.projectId"
+                                                class="clean-input w-full text-sm py-3 border-none bg-white">
+                                                <option disabled value="">選擇主計畫...</option>
+                                                <option v-for="p in projects" :value="p.id">{{ p.name }}</option>
+                                            </select>
+                                        </div>
+                                        <div class="flex-1">
+                                            <input type="number" v-model.number="item.amount" placeholder="$0"
+                                                class="clean-input w-full text-lg text-right font-mono py-3 border-none bg-white text-[#EA580C]">
+                                        </div>
+                                    </div>
+
+                                    <div v-if="item.projectId" class="space-y-2">
+                                        <div class="relative">
+                                            <select v-model="item.branch"
+                                                class="w-full bg-white text-sm rounded-xl p-3 border border-slate-200 focus:outline-none focus:border-[#FB923C] font-bold text-slate-600 appearance-none">
+                                                <option disabled value="">請選擇專案分項 (如: 測A)...</option>
+                                                <option v-for="line in getProjectBudgetLines(item.projectId)"
+                                                    :value="line.category">{{ line.category }}</option>
+                                            </select>
+                                            <div
+                                                class="absolute right-3 top-3 pointer-events-none text-slate-400 text-xs">
+                                                ▼</div>
+                                        </div>
+
+                                        <div v-if="item.branch" class="text-right text-[10px] font-mono px-1">
+                                            <span class="text-slate-400">該分項剩餘: </span>
+                                            <span
+                                                :class="getBranchRemaining(item.projectId, item.branch, item.amount) < 0 ? 'text-red-500 font-bold' : 'text-[#10B981]'">
+                                                ${{ getBranchRemaining(item.projectId, item.branch,
+                                                item.amount).toLocaleString() }}
+                                            </span>
+                                        </div>
+
+                                        <div class="relative">
+                                            <select v-model="item.subject"
+                                                class="w-full bg-slate-50 text-sm rounded-xl p-3 border border-slate-200 focus:outline-none focus:border-[#FB923C] text-slate-600 appearance-none">
+                                                <option disabled value="">請選擇會計科目 (如: 講師費)...</option>
+                                                <option v-for="opt in commonItems" :value="opt">{{ opt }}</option>
+                                            </select>
+                                            <div
+                                                class="absolute right-3 top-3 pointer-events-none text-slate-400 text-xs">
+                                                ▼</div>
+                                        </div>
+
+                                        <input type="text" v-model="item.description" placeholder="詳細說明 (如: 高鐵去台北)"
+                                            class="w-full bg-transparent text-sm border-b border-slate-200 p-2 focus:outline-none focus:border-[#FB923C] font-medium text-slate-700 transition-colors">
+                                    </div>
+                                    <div v-else class="text-center text-xs text-slate-400 py-2">請先選擇主計畫</div>
+
+                                </div>
+                            </div>
+                            <button
+                                @click="form.items.push({projectId:'',amount:'',branch:'',subject:'',description:''})"
+                                class="w-full py-4 border border-dashed border-slate-300 text-slate-400 rounded-2xl text-xs font-bold hover:border-[#FB923C] hover:text-[#FB923C] tracking-widest">+
+                                增加一筆</button>
+                        </div>
+                        <div class="mt-8">
+                            <button @click="submitExpense"
+                                class="w-full btn-campfire py-4 text-sm tracking-[0.2em] shadow-xl flex items-center justify-center gap-3 hover:scale-[1.02]">
+                                <span>確認記帳</span>
+                                <span
+                                    class="bg-black/10 px-2 py-0.5 rounded text-xs font-mono border border-white/20">${{
+                                    totalExpense.toLocaleString() }}</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div v-else-if="tab==='funds'" class="pb-24 space-y-4">
+                        <div class="glass-panel p-6">
+                            <div class="flex justify-between items-center mb-8">
+                                <h3 class="text-xl font-bold text-slate-800">人員資金狀態</h3>
+                                <button @click="showTransferModal=true"
+                                    class="w-10 h-10 rounded-full bg-orange-100 text-[#EA580C] flex items-center justify-center hover:bg-[#FB923C] hover:text-white transition-colors text-xl shadow-sm">＋</button>
+                            </div>
+                            <div class="space-y-8">
+                                <div v-for="u in userStatusList" :key="u.id" @click="openUserHistory(u)"
+                                    class="cursor-pointer group">
+                                    <div class="flex justify-between text-xs font-bold mb-2 font-mono">
+                                        <span class="text-slate-500 group-hover:text-slate-800 transition-colors">{{
+                                            u.name }}</span>
+                                        <span :class="u.balance < 0 ? 'text-[#F43F5E]' : 'text-[#10B981]'">{{ u.balance
+                                            < 0 ? '' : '+' }}${{ formatCompact(u.balance) }}</span>
+                                    </div>
+                                    <div
+                                        class="h-3 w-full bg-slate-100 rounded-full overflow-hidden relative border border-slate-100 shadow-inner">
+                                        <div class="absolute left-1/2 top-0 bottom-0 w-px bg-slate-300 z-10"></div>
+                                        <div class="w-1/2 h-full absolute right-1/2 flex justify-end">
+                                            <div v-if="u.balance < 0"
+                                                class="h-full bg-gradient-to-l from-red-400 to-red-500 rounded-l-full"
+                                                :style="{width: Math.min((Math.abs(u.balance)/maxUserBalance)*100, 100) + '%'}">
+                                            </div>
+                                        </div>
+                                        <div class="w-1/2 h-full absolute left-1/2 flex justify-start">
+                                            <div v-if="u.balance > 0"
+                                                class="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-r-full"
+                                                :style="{width: Math.min((u.balance/maxUserBalance)*100, 100) + '%'}">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div v-else-if="tab==='income'" class="glass-panel p-6 pb-24">
+                        <h3 class="text-xl font-bold text-slate-800 mb-6">新增主計畫</h3>
+                        <div class="space-y-6">
+                            <div class="flex gap-3">
+                                <input type="text" v-model="newProj.name" placeholder="計畫名稱"
+                                    class="clean-input flex-[2] text-sm">
+                                <input type="number" v-model.number="newProj.retention" placeholder="抽成%"
+                                    class="clean-input flex-1 text-sm text-center font-bold text-[#EA580C] border-orange-200">
+                            </div>
+                            <div class="bg-white/50 p-4 rounded-2xl border border-white space-y-3">
+                                <div class="flex justify-between items-center mb-2">
+                                    <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest">設定撥款期數</h4>
+                                    <span class="text-xs font-mono font-bold text-slate-600">Total: ${{
+                                        newProjTotal.toLocaleString() }}</span>
+                                </div>
+                                <div v-for="(term, idx) in newProj.terms" :key="idx"
+                                    class="flex gap-2 animate-[modalFloat_0.2s]">
+                                    <input type="text" v-model="term.name" :placeholder="'第 ' + (idx+1) + ' 期名稱'"
+                                        class="bg-white text-xs p-3 rounded-xl flex-1 border border-slate-200">
+                                    <input type="number" v-model.number="term.amount" placeholder="$"
+                                        class="bg-white text-xs p-3 rounded-xl w-24 font-mono font-bold text-[#EA580C] border border-slate-200">
+                                    <button v-if="newProj.terms.length > 1" @click="newProj.terms.splice(idx,1)"
+                                        class="text-slate-300 hover:text-red-500 px-2">×</button>
+                                </div>
+                                <button @click="newProj.terms.push({name:'', amount:''})"
+                                    class="w-full py-3 border border-dashed border-slate-300 text-slate-400 rounded-xl text-xs font-bold hover:bg-white hover:text-[#FB923C] transition-colors">+
+                                    增加期數</button>
+                            </div>
+                            <button @click="createProject"
+                                class="w-full btn-campfire py-4 text-xs font-bold shadow-lg mt-2">建立計畫與期數</button>
+                        </div>
+                    </div>
+            </transition>
+        </main>
+
+        <div class="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-40 w-[90%] max-w-[360px]">
+            <nav class="island-nav">
+                <div class="nav-indicator" :style="indicatorStyle"></div>
+                <div class="nav-item" :class="{active: tab==='dashboard'}" @click="tab='dashboard'">專案</div>
+                <div class="nav-item" :class="{active: tab==='funds'}" @click="tab='funds'">各人</div>
+                <div class="nav-item" :class="{active: tab==='expense'}" @click="tab='expense'">記帳</div>
+                <div class="nav-item" :class="{active: tab==='income'}" @click="tab='income'">進帳</div>
+            </nav>
+        </div>
+
+        <div v-if="selectedProject"
+            class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/20 backdrop-blur-sm"
+            @click.self="selectedProject=null">
+            <div
+                class="bg-[#FDFBF9] w-full max-w-sm h-[80vh] rounded-[32px] flex flex-col shadow-2xl overflow-hidden modal-enter relative border border-white">
+                <div class="absolute top-0 left-0 w-full h-40 bg-gradient-to-b from-orange-100/60 to-transparent z-0">
+                </div>
+
+                <div class="p-6 pb-2 border-b border-slate-100 bg-white/80 backdrop-blur-md sticky top-0 z-20">
+                    <div v-if="!isEditingProject" class="flex justify-between items-start mb-1">
+                        <h2 class="text-2xl font-bold text-slate-800">{{ selectedProject.name }}</h2>
+                        <div class="flex gap-2">
+                            <button @click="startEditProject"
+                                class="w-8 h-8 rounded-full bg-orange-100 text-[#EA580C] flex items-center justify-center text-sm">✏️</button>
+                            <button @click="selectedProject=null"
+                                class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200">×</button>
+                        </div>
+                    </div>
+                    <div v-else class="space-y-2 mb-2 bg-white/50 p-3 rounded-xl border border-orange-200">
+                        <input type="text" v-model="editProjectForm.name"
+                            class="w-full text-lg font-bold bg-white p-1 rounded border border-slate-200">
+                        <div class="flex gap-2">
+                            <input type="number" v-model.number="editProjectForm.budget"
+                                class="w-full text-sm font-mono bg-white p-1 rounded border border-slate-200"
+                                placeholder="總預算">
+                            <input type="number" v-model.number="editProjectForm.retention"
+                                class="w-20 text-sm font-mono text-center bg-white p-1 rounded border border-slate-200"
+                                placeholder="抽成%">
+                        </div>
+                        <div class="flex gap-2 mt-2">
+                            <button @click="isEditingProject=false"
+                                class="flex-1 py-1 bg-slate-200 rounded text-xs">取消</button>
+                            <button @click="saveEditProject"
+                                class="flex-1 py-1 bg-[#FB923C] text-white rounded text-xs font-bold">儲存</button>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-2 mt-4">
+                        <div @click="subTab='overview'" class="pill-tab" :class="{active: subTab==='overview'}">概況
+                            Status</div>
+                        <div @click="subTab='history'" class="pill-tab" :class="{active: subTab==='history'}">收支 Records
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-10 relative z-10">
+
+                    <div v-if="subTab==='overview'" class="space-y-10 animate-[modalFloat_0.3s]">
+                        <div>
+                            <div class="flex justify-between items-end mb-4">
+                                <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest">分項預算分配</h4>
+                                <button @click="showAddBudgetLine=!showAddBudgetLine"
+                                    class="text-[10px] bg-slate-100 text-slate-600 px-3 py-1 rounded-full font-bold">+
+                                    新增專案分項</button>
+                            </div>
+
+                            <div v-if="showAddBudgetLine"
+                                class="mb-4 bg-white p-4 rounded-xl space-y-3 border border-slate-100 shadow-sm animate-[modalFloat_0.2s]">
+                                <div
+                                    class="flex justify-between text-[10px] text-slate-400 font-mono border-b border-slate-50 pb-2">
+                                    <span>可分配總額: ${{ formatCompact(selectedProject.safeBudget) }}</span>
+                                    <span :class="remainingBudget < 0 ? 'text-red-500 font-bold' : 'text-[#10B981]'">剩餘:
+                                        ${{ (remainingBudget - (newBudget.amount||0)).toLocaleString() }}</span>
+                                </div>
+                                <div class="flex gap-2">
+                                    <input type="text" v-model="newBudget.category" placeholder="分項名稱 (如: 測A)"
+                                        class="bg-slate-50 rounded-lg px-2 py-2 text-xs w-1/3 outline-none border border-slate-200">
+                                    <input type="number" v-model.number="newBudget.amount" placeholder="$"
+                                        class="bg-slate-50 rounded-lg px-2 py-2 text-xs flex-1 outline-none font-mono border border-slate-200"
+                                        :class="(remainingBudget - newBudget.amount) < 0 ? 'text-red-500 font-bold' : ''">
+                                    <button @click="addBudgetLine"
+                                        class="text-xs font-bold px-3 bg-[#FB923C] text-white rounded-lg">OK</button>
+                                </div>
+                            </div>
+
+                            <div class="space-y-5">
+                                <div v-for="line in selectedProject.budgetLines" :key="line.category">
+                                    <div class="flex justify-between mb-2 text-xs">
+                                        <span class="font-bold text-slate-700 flex items-center gap-2">{{ line.category
+                                            }}</span>
+                                        <span class="font-mono"
+                                            :class="(line.budget - line.used) < 0 ? 'text-red-500 font-bold' : 'text-slate-400'">餘
+                                            ${{ (line.budget - line.used).toLocaleString() }}</span>
+                                    </div>
+                                    <div class="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                                        <div class="h-full bg-[#FB923C]"
+                                            :style="{width: Math.min((line.used/line.budget)*100, 100) + '%'}"></div>
+                                    </div>
+                                </div>
+                                <div v-if="!selectedProject.budgetLines.length"
+                                    class="text-center text-[10px] text-slate-400 py-6 border border-dashed border-slate-200 rounded-xl">
+                                    尚未設定專案分項</div>
+                            </div>
+                        </div>
+                        <div>
+                            <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6">進帳里程碑</h4>
+                            <div class="pl-2 border-l-2 border-slate-100 ml-2 space-y-6">
+                                <div v-for="term in selectedProject.incomeTerms" :key="term.id" class="relative pl-6">
+                                    <div class="absolute -left-[7px] top-1.5 w-3 h-3 rounded-full border-4 border-[#FDFBF9]"
+                                        :class="term.status==='received' ? 'bg-[#10B981]' : 'bg-slate-300'"></div>
+                                    <div
+                                        class="flex justify-between items-center group bg-white p-3 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-all">
+                                        <div>
+                                            <div class="text-xs font-bold text-slate-800">{{ term.termName }}</div>
+                                            <div class="text-[10px] font-mono text-slate-400">${{
+                                                term.amount.toLocaleString() }}</div>
+                                        </div>
+                                        <button v-if="term.status==='pending'" @click="confirmIncome(term)"
+                                            class="text-[10px] bg-slate-900 text-white px-3 py-1 rounded-full font-bold">確認入帳</button>
+                                        <div v-else class="text-[10px] font-mono font-bold text-[#10B981]">已入帳</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div v-if="subTab==='history'" class="space-y-3 animate-[modalFloat_0.3s]">
+                        <div v-for="tx in getProjectHistory(selectedProject.id)" :key="tx.id"
+                            class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+                            <div v-if="editingTx !== tx.id" class="flex justify-between items-center">
+                                <div>
+                                    <div class="font-bold text-xs text-slate-800 mb-0.5">{{ tx.item || tx.note || '資金轉移'
+                                        }}</div>
+                                    <div class="text-[10px] text-slate-400 font-mono">{{ tx.date }} · {{ tx.relatedUser
+                                        }}</div>
+                                    <span v-if="tx.category"
+                                        class="inline-block mt-1 text-[9px] bg-slate-100 px-1.5 py-0.5 rounded text-slate-500">{{
+                                        tx.category }}</span>
+                                </div>
+                                <div class="text-right">
+                                    <div class="font-mono font-bold text-sm"
+                                        :class="tx.isIncome ? 'text-[#10B981]' : 'text-[#F43F5E]'">{{ tx.isIncome ? '+'
+                                        : '-' }}${{ tx.amount.toLocaleString() }}</div>
+                                    <div class="flex gap-3 justify-end mt-1">
+                                        <button v-if="!tx.isIncome" @click="startEdit(tx)"
+                                            class="text-[10px] text-slate-400 hover:text-[#EA580C] transition-colors">修改</button>
+                                        <button v-if="!tx.isIncome" @click="deleteTransaction(tx)"
+                                            class="text-[10px] text-slate-400 hover:text-[#F43F5E] transition-colors">刪除</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div v-else class="space-y-2 bg-slate-50 p-2 rounded-xl border border-slate-200">
+                                <div class="flex gap-2">
+                                    <input type="date" v-model="editForm.date"
+                                        class="bg-white text-xs p-2 rounded w-full text-slate-700 border border-slate-200">
+                                    <input type="number" v-model.number="editForm.amount"
+                                        class="bg-white text-xs p-2 rounded w-full font-mono font-bold text-[#F43F5E] border border-slate-200">
+                                </div>
+                                <input type="text" v-model="editForm.item" placeholder="品項"
+                                    class="bg-white text-xs p-2 rounded w-full text-slate-700 border border-slate-200">
+                                <div class="flex gap-2 pt-1">
+                                    <button @click="cancelEdit"
+                                        class="flex-1 py-2 bg-slate-200 rounded text-xs text-slate-500">取消</button>
+                                    <button @click="saveEdit(tx)"
+                                        class="flex-1 py-2 bg-[#FB923C] text-white rounded text-xs font-bold">儲存</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div v-if="!getProjectHistory(selectedProject.id).length"
+                            class="text-center text-slate-400 text-xs py-10">尚無收支紀錄</div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div v-if="showTransferModal"
+            class="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-900/20 backdrop-blur-sm"
+            @click.self="showTransferModal=false">
+            <div class="glass-panel p-8 w-full max-w-sm modal-enter bg-white shadow-2xl">
+                <h3 class="text-2xl font-bold text-slate-800 mb-6">資金轉移</h3>
+                <div class="space-y-4">
+                    <select v-model="transferForm.projectId" class="clean-input w-full text-sm py-3 bg-white">
+                        <option disabled value="">資金來源主計畫</option>
+                        <option v-for="p in projects" :value="p.id">{{ p.name }}</option>
+                    </select>
+                    <div class="flex gap-3">
+                        <select v-model="transferForm.targetUser"
+                            class="clean-input flex-1 text-sm py-3 bg-white font-bold text-[#EA580C]">
+                            <option v-for="u in users" :value="u.name">{{ u.name }}</option>
+                        </select>
+                        <input type="number" v-model.number="transferForm.amount" placeholder="$"
+                            class="clean-input w-1/3 text-lg font-mono text-center bg-white">
+                    </div>
+                    <input type="text" v-model="transferForm.note" placeholder="備註"
+                        class="clean-input w-full text-sm py-3 bg-white">
+                    <button @click="submitTransfer"
+                        class="w-full btn-campfire py-3 text-sm mt-2 shadow-lg">確認執行</button>
+                </div>
+            </div>
+        </div>
+
+        <div v-if="selectedUser"
+            class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/20 backdrop-blur-sm"
+            @click.self="selectedUser=null">
+            <div
+                class="bg-[#FDFBF9] w-full max-w-sm h-[80vh] rounded-[32px] flex flex-col shadow-2xl overflow-hidden modal-enter border border-white">
+                <div class="p-6 border-b border-slate-100 bg-white/50 backdrop-blur">
+                    <h3 class="text-2xl font-bold text-slate-800">{{ selectedUser.name }}</h3>
+                    <div class="text-2xl font-mono font-bold mt-2"
+                        :class="selectedUser.balance<0?'text-[#F43F5E]':'text-[#10B981]'">
+                        ${{ formatCompact(selectedUser.balance) }}
+                    </div>
+                </div>
+                <div class="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-3 bg-[#F9F7F5]">
+                    <div v-for="tx in getUserHistory(selectedUser.name)" :key="tx.id"
+                        class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <div class="font-bold text-xs text-slate-800">{{ tx.item || tx.note || '資金轉移' }}</div>
+                                <div class="text-[10px] text-slate-400 font-mono">{{ tx.date }} · {{ tx.project }}</div>
+                            </div>
+                            <div class="text-right font-mono font-bold text-sm"
+                                :class="tx.isIncome ? 'text-[#10B981]' : 'text-[#F43F5E]'">
+                                {{ tx.isIncome ? '+' : '-' }}${{ tx.amount.toLocaleString() }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="toast-container">
+            <transition-group name="list">
+                <div v-for="t in toasts" :key="t.id" class="toast" :class="t.type">
+                    <span v-if="t.type==='success'">✓</span>
+                    <span v-if="t.type==='error'">!</span>
+                    {{ t.msg }}
+                </div>
+            </transition-group>
+        </div>
+
+    </div>
+
+    <script>
+        const { createApp, ref, reactive, computed, onMounted, watch, toRefs } = Vue;
+        // ⚠️ 部署後請更新 URL
+        const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbyKtICKtLnl01vytLz90174UICy1bfdMbKQdRqeZX3KOhyQGwJNQyXQDouxnXXfEfLQ/exec';
+        const STORAGE_KEY = 'transtation_v26_cache';
+
+        createApp({
+            setup() {
+                // --- UI State & Toasts ---
+                const ui = reactive({
+                    loading: false,
+                    submitting: false,
+                    tab: 'dashboard',
+                    subTab: 'overview',
+                    refreshTimer: 30,
+                    showTransferModal: false,
+                    showAddBudgetLine: false,
+                    editingTx: null,
+                    isEditingProject: false,
+                });
+
+                const toasts = ref([]);
+                const showToast = (msg, type = 'info') => {
+                    const id = Date.now();
+                    toasts.value.push({ id, msg, type });
+                    setTimeout(() => {
+                        const idx = toasts.value.findIndex(t => t.id === id);
+                        if (idx > -1) toasts.value.splice(idx, 1);
+                    }, 3000);
+                };
+
+                // --- Data State ---
+                const data = reactive({
+                    users: [],
+                    projects: [],
+                    projectStats: {},
+                    allTransactions: [],
+                    commonItems: []
+                });
+
+                const currentUser = ref(null);
+                const tempUser = ref(null);
+                const selectedUser = ref(null);
+                const selectedProject = ref(null);
+
+                // --- Forms ---
+                const form = ref({
+                    date: new Date().toISOString().split('T')[0],
+                    payer: '',
+                    items: [{ projectId: '', amount: '', branch: '', subject: '', description: '' }]
+                });
+
+                const transferForm = ref({ projectId: '', targetUser: '', amount: '', note: '' });
+                const newProj = ref({ name: '', retention: 10, terms: [{ name: '第一期', amount: '' }] });
+                const newBudget = ref({ category: '', amount: '' });
+                const editForm = ref({});
+                const editProjectForm = ref({});
+
+                // --- Storage Logic ---
+                const loadFromCache = () => {
+                    const cached = localStorage.getItem(STORAGE_KEY);
+                    if (cached) {
+                        try {
+                            const parsed = JSON.parse(cached);
+                            Object.assign(data, parsed.data);
+                            if (parsed.currentUser) currentUser.value = parsed.currentUser;
+                            ui.loading = false;
+                        } catch (e) { console.error('Cache parse error', e); }
+                    }
+                };
+
+                const saveToCache = () => {
+                    if (data.users.length > 0) {
+                        localStorage.setItem(STORAGE_KEY, JSON.stringify({
+                            data: data,
+                            currentUser: currentUser.value,
+                            timestamp: Date.now()
+                        }));
+                    }
+                };
+
+                watch([data, currentUser], () => saveToCache(), { deep: true });
+
+                // --- API Logic ---
+                const loadData = async (silent = false) => {
+                    if (!silent && data.users.length === 0) ui.loading = true;
+                    try {
+                        const res = await fetch(`${GAS_API_URL}?op=getData`);
+                        const json = await res.json();
+
+                        data.users = json.users;
+                        data.projects = json.projects;
+                        data.projectStats = json.projectStats;
+                        data.allTransactions = json.allTransactions;
+                        data.commonItems = json.commonItems || [];
+
+                        if (currentUser.value) currentUser.value = data.users.find(x => x.name === currentUser.value.name) || currentUser.value;
+                        if (selectedProject.value && data.projectStats[selectedProject.value.id]) {
+                            const fresh = data.projectStats[selectedProject.value.id];
+                            selectedProject.value = { ...fresh, id: selectedProject.value.id };
+                        }
+
+                    } catch (e) {
+                        console.error(e);
+                        if (!silent && data.users.length === 0) showToast('連線失敗，無法取得資料', 'error');
+                        else if (!silent) showToast('連線失敗，目前顯示為舊資料', 'error');
+                    }
+                    if (!silent) ui.loading = false;
+                };
+
+                const apiCall = async (payload) => {
+                    ui.submitting = true;
+                    try {
+                        await fetch(GAS_API_URL, {
+                            method: 'POST',
+                            body: JSON.stringify({ ...payload, operator: currentUser.value?.name }),
+                            headers: { 'Content-Type': 'text/plain' }
+                        });
+                        loadData(true);
+                        return true;
+                    } catch (e) {
+                        showToast('操作失敗，請檢查連線', 'error');
+                        return false;
+                    }
+                    finally {
+                        setTimeout(() => ui.submitting = false, 500);
+                    }
+                };
+
+                // --- Lifecycle ---
+                onMounted(() => {
+                    loadFromCache();
+                    setTimeout(() => loadData(!data.users.length === 0), 0);
+                    setInterval(() => {
+                        if (ui.refreshTimer > 0) ui.refreshTimer--;
+                        else { loadData(true); ui.refreshTimer = 30; }
+                    }, 1000);
+                });
+
+                const forceRefresh = () => { loadData(); ui.refreshTimer = 30; showToast('已更新資料', 'success'); };
+
+                // --- Computed ---
+                const indicatorStyle = computed(() => {
+                    const tabs = ['dashboard', 'funds', 'expense', 'income'];
+                    const index = tabs.indexOf(ui.tab);
+                    return { left: `${index * 25}%`, width: '25%' };
+                });
+
+                const newProjTotal = computed(() => newProj.value.terms.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0));
+
+                const remainingBudget = computed(() => {
+                    if (!selectedProject.value) return 0;
+                    const allocated = selectedProject.value.budgetLines.reduce((sum, line) => sum + line.budget, 0);
+                    return selectedProject.value.safeBudget - allocated;
+                });
+
+                const globalStats = computed(() => {
+                    let totalBudget = 0, revenue = 0, cash = 0, expense = 0;
+                    if (data.projectStats) {
+                        Object.values(data.projectStats).forEach(p => {
+                            totalBudget += p.totalBudget;
+                            p.incomeTerms.forEach(term => { if (term.status === 'received') revenue += term.amount; });
+                            expense += p.totalExpense;
+                            cash += p.cashBalance;
+                        });
+                    }
+                    return { totalBudget, revenue, cash, expense };
+                });
+
+                const totalExpense = computed(() => form.value.items.reduce((s, i) => s + (Number(i.amount) || 0), 0));
+                const userStatusList = computed(() => data.users.map(u => ({ ...u, balance: u.pettyCash })));
+                const maxUserBalance = computed(() => { const max = Math.max(...data.users.map(u => Math.abs(u.pettyCash))); return max === 0 ? 1000 : max; });
+
+                const confirmIdentity = () => { currentUser.value = tempUser.value; form.value.payer = currentUser.value.name; };
+                const formatCompact = (n) => new Intl.NumberFormat('en-US', { notation: "compact", maximumFractionDigits: 1 }).format(n);
+
+                // --- Actions ---
+                const submitExpense = async () => {
+                    const items = form.value.items.map(i => ({
+                        ...i,
+                        projectName: data.projects.find(p => p.id === i.projectId)?.name,
+                        category: i.branch,
+                        itemName: `[${i.subject || '未分類'}] ${i.description || ''}`
+                    }));
+
+                    if (await apiCall({ action: 'expense', date: form.value.date, payer: form.value.payer, items })) {
+                        form.value.items = [{ projectId: '', amount: '', branch: '', subject: '', description: '' }];
+                        ui.tab = 'dashboard';
+                        showToast('記帳成功', 'success');
+                    }
+                };
+
+                const getBranchRemaining = (pid, branchName, currentInputAmount) => {
+                    const p = data.projectStats[pid];
+                    if (!p) return 0;
+                    const line = p.budgetLines.find(l => l.category === branchName);
+                    if (!line) return 0;
+                    return line.budget - line.used - (Number(currentInputAmount) || 0);
+                };
+
+                const createProject = async () => {
+                    if (await apiCall({
+                        action: 'createProject',
+                        name: newProj.value.name,
+                        budget: newProjTotal.value,
+                        retention: newProj.value.retention,
+                        terms: newProj.value.terms.filter(t => t.name && t.amount)
+                    })) {
+                        newProj.value = { name: '', retention: 10, terms: [{ name: '第一期', amount: '' }] };
+                        ui.tab = 'dashboard';
+                        showToast('計畫建立成功', 'success');
+                    }
+                };
+
+                const addBudgetLine = async () => {
+                    if (!newBudget.value.category || !newBudget.value.amount) return;
+                    await apiCall({ action: 'addBudgetLine', projectId: selectedProject.value.id, ...newBudget.value });
+                    newBudget.value = { category: '', amount: '' }; ui.showAddBudgetLine = false;
+                    showToast('已新增分項預算', 'success');
+                };
+
+                const startEdit = (tx) => { ui.editingTx = tx.id; editForm.value = { ...tx }; };
+                const cancelEdit = () => { ui.editingTx = null; editForm.value = {}; };
+                const saveEdit = async (originalTx) => { if (await apiCall({ action: 'editTransaction', ...editForm.value })) { ui.editingTx = null; showToast('修改成功', 'success'); } };
+                const deleteTransaction = async (tx) => { if (confirm(`確定刪除?`)) { await apiCall({ action: 'deleteTransaction', id: tx.id, type: tx.type }); showToast('已刪除', 'success'); } };
+
+                const getProjectBudgetLines = (pid) => { return data.projectStats[pid]?.budgetLines || []; };
+                const confirmIncome = async (term) => { if (confirm(`確認已收到款項 $${term.amount}?`)) { await apiCall({ action: 'confirmIncome', id: term.id }); showToast('已確認入帳', 'success'); } };
+                const submitTransfer = async () => {
+                    const pName = data.projects.find(p => p.id === transferForm.value.projectId)?.name;
+                    if (await apiCall({ action: 'transfer', ...transferForm.value, projectName: pName })) {
+                        ui.showTransferModal = false;
+                        transferForm.value = { projectId: '', targetUser: '', amount: '', note: '' };
+                        showToast('轉帳成功', 'success');
+                    }
+                };
+
+                const openUserHistory = (u) => selectedUser.value = u;
+                const getUserHistory = (name) => data.allTransactions.filter(tx => tx.relatedUser === name).sort((a, b) => new Date(b.date) - new Date(a.date));
+                const openProjectDetail = (stat, pid) => { selectedProject.value = { id: pid, ...stat }; ui.subTab = 'overview'; };
+                const getProjectHistory = (pid) => data.allTransactions.filter(tx => tx.projectId === pid).sort((a, b) => new Date(b.date) - new Date(a.date));
+
+                const startEditProject = () => { editProjectForm.value = { ...selectedProject.value }; ui.isEditingProject = true; };
+                const saveEditProject = async () => {
+                    if (await apiCall({ action: 'editProject', ...editProjectForm.value })) {
+                        ui.isEditingProject = false;
+                        selectedProject.value = { ...selectedProject.value, ...editProjectForm.value };
+                        showToast('專案已更新', 'success');
+                    }
+                };
+
+                return {
+                    ...toRefs(ui),
+                    ...toRefs(data),
+                    currentUser, tempUser, selectedUser, selectedProject, form, transferForm, newProj,
+                    newBudget, editForm, editProjectForm, toasts,
+                    newProjTotal, totalExpense, userStatusList, maxUserBalance, globalStats, indicatorStyle, remainingBudget,
+                    confirmIdentity, formatCompact, submitExpense, submitTransfer, createProject,
+                    openUserHistory, getUserHistory, openProjectDetail, getProjectHistory,
+                    addBudgetLine, getProjectBudgetLines, confirmIncome, deleteTransaction,
+                    loadData, forceRefresh, startEdit, cancelEdit, saveEdit,
+                    startEditProject, saveEditProject, getBranchRemaining,
+                    showToast
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+
+</html>

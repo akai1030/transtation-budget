@@ -1,0 +1,86 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String        @id @default(uuid())
+  name         String        @unique
+  pettyCash    Int           @default(0) // Current balance of the user
+  transactions Transaction[] // Relation to Transaction
+}
+
+model Project {
+  id          String       @id @default(uuid())
+  name        String
+  totalBudget Int
+  retention   Int          @default(10) // Representing %
+  description String?
+  isArchived  Boolean      @default(false)
+  budgetLines BudgetLine[]
+  safeBalance Int          @default(0) // Safe budget balance (Virtual field in Logic)
+
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  incomeTerms IncomeTerm[]
+  Transaction Transaction[]
+}
+
+model BudgetLine {
+  id        String  @id @default(uuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  name        String // Was 'category'. Now represents Sub-project Name (e.g. "Workshop A")
+  budget      Int
+  used        Int          @default(0) // Virtual field in Logic
+  incomeTerms IncomeTerm[]
+  safeBalance Int          @default(0) // Virtual field in Logic
+
+  transactions Transaction[] // Relation to transactions
+}
+
+model IncomeTerm {
+  id           String      @id @default(uuid())
+  name         String
+  amount       Int
+  status       String      @default("pending") // pending, received
+  projectId    String
+  project      Project     @relation(fields: [projectId], references: [id])
+  BudgetLine   BudgetLine? @relation(fields: [budgetLineId], references: [id])
+  budgetLineId String?
+}
+
+model Transaction {
+  id       String   @id @default(uuid())
+  date     DateTime
+  amount   Int
+  isIncome Boolean  @default(false)
+
+  subject     String
+  description String?
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  projectId String?
+  project   Project? @relation(fields: [projectId], references: [id])
+
+  // New Relation: Sub-project (BudgetLine)
+  budgetLineId String?
+  budgetLine   BudgetLine? @relation(fields: [budgetLineId], references: [id])
+
+  // Expense Category (e.g. "Lecture Fee", "Travel")
+  // Previously 'budgetLineCategory', now strictly 'category'
+  budgetLineCategory String?
+
+  photoUrl String?
+  currency String  @default("TWD")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
