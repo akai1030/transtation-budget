@@ -104,7 +104,8 @@ export const useBudgetStore = defineStore('budget', {
                 }
             } catch (err) {
                 console.error('Failed to load data:', err);
-                this.error = '無法更新資料，請檢查網路連線';
+                const apiError = err.data?.message || err.message || JSON.stringify(err);
+                this.error = `錯誤: ${apiError}`;
             } finally {
                 if (!silent) this.loading = false;
             }
