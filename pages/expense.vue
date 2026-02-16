@@ -191,7 +191,7 @@
             <span class="text-sm font-bold text-[#1B4588] font-mono">{{ shortDate }}</span>
           </div>
           <input type="date" v-model="selectedDate" 
-            class="absolute inset-0 opacity-0 cursor-pointer w-full h-full" />
+            class="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-20" />
         </div>
       </div>
 
@@ -310,8 +310,8 @@ const shortDate = computed(() => {
   if (!selectedDate.value) return '今天';
   const d = new Date(selectedDate.value + 'T00:00:00');
   const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  if (d.getTime() === today.getTime()) return '今天';
+  // 使用 toDateString 比較，避免時區問題
+  if (d.toDateString() === today.toDateString()) return '今天';
   return `${d.getMonth() + 1}/${d.getDate()}`;
 });
 
