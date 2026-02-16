@@ -184,14 +184,15 @@
         </div>
 
         <!-- 日期 -->
-        <div class="bg-white rounded-[28px] p-5 !py-3.5 shadow-sm border border-[#E8E2D8] relative overflow-hidden">
+        <div @click="openDatePicker" class="bg-white rounded-[28px] p-5 !py-3.5 shadow-sm border border-[#E8E2D8] relative overflow-hidden cursor-pointer group hover:border-[#1B4588]/30 transition-colors">
           <div class="text-[10px] font-bold text-[#a09888] uppercase tracking-[0.2em] mb-1.5">日期</div>
           <div class="flex items-center gap-1.5">
-            <PhCalendarBlank class="text-[#a09888] text-sm flex-shrink-0" />
+            <PhCalendarBlank class="text-[#a09888] text-sm flex-shrink-0 group-hover:text-[#1B4588] transition-colors" />
             <span class="text-sm font-bold text-[#1B4588] font-mono">{{ shortDate }}</span>
           </div>
-          <input type="date" v-model="selectedDate" 
-            class="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-20" />
+          <!-- Opacity 0.01 確保存在於渲染層但不可見 -->
+          <input ref="dateInput" type="date" v-model="selectedDate" 
+            class="absolute inset-0 opacity-[0.01] cursor-pointer w-full h-full z-20 appearance-none" />
         </div>
       </div>
 
@@ -241,6 +242,16 @@ const selectedBranch = ref('');
 const selectedCategory = ref('');
 const note = ref('');
 const selectedDate = ref(new Date().toISOString().split('T')[0]);
+const dateInput = ref(null); // 日期輸入框 Ref
+
+// 強制打開日期選擇器
+const openDatePicker = () => {
+  if (dateInput.value && typeof dateInput.value.showPicker === 'function') {
+    dateInput.value.showPicker();
+  } else {
+    dateInput.value?.click();
+  }
+};
 
 // 自訂科目
 const showCustomInput = ref(false);
