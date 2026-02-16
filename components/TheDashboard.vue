@@ -1,7 +1,7 @@
 <template>
   <div class="px-5 sm:px-6 py-8 space-y-6">
     <!-- 標題列 -->
-    <header class="stagger-item flex justify-between items-end" style="--delay: 0">
+    <header class="stagger-item flex justify-between items-end relative z-50" style="--delay: 0">
       <div>
         <div class="text-[10px] font-bold text-[#a09888] uppercase tracking-[0.2em]">{{ todayDate }}</div>
         <h1 class="text-2xl font-bold text-[#1B4588] mt-1 tracking-tight">儀表板</h1>
