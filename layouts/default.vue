@@ -46,7 +46,16 @@
         </div>
         <h2 class="text-xl font-bold text-[#1B4588] mb-6 text-center">歡迎回來</h2>
         
-        <div v-if="!store.users.length" class="text-center text-[#a09888] py-4">載入使用者中...</div>
+        <div v-if="store.error" class="text-center text-red-500 py-4 bg-red-50 rounded-xl mb-3 px-4 text-sm font-bold">
+          {{ store.error }}
+          <button @click="store.loadData()" class="block mx-auto mt-2 text-xs underline text-red-400">重試</button>
+        </div>
+        
+        <div v-else-if="!store.users.length" class="text-center text-[#a09888] py-4">
+          <PhSpinner class="animate-spin inline-block mr-2" />
+          載入使用者中...
+          <div class="text-[10px] mt-2 opacity-60">若長時間無回應請檢查網路或重新整理</div>
+        </div>
         
         <div v-else class="space-y-3">
           <div v-for="u in store.users" :key="u.name" @click="handleLogin(u)" class="p-4 rounded-2xl bg-white border border-[#E8E2D8] hover:border-[#1B4588]/30 hover:shadow-md cursor-pointer flex justify-between items-center group transition-all">
@@ -86,7 +95,7 @@
 </template>
 
 <script setup>
-import { PhCaretRight } from '@phosphor-icons/vue';
+import { PhCaretRight, PhSpinner } from '@phosphor-icons/vue';
 const store = useBudgetStore();
 const showSplash = ref(true);
 
