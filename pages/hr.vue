@@ -258,6 +258,7 @@
 import { ref, reactive, computed, onMounted } from 'vue';
 import { PhPlus, PhSpinner, PhCoffee, PhCheckCircle } from '@phosphor-icons/vue';
 import { useBudgetStore } from '~/stores/budget';
+import { useAuthStore } from '~/stores/auth';
 
 const store = useBudgetStore();
 const authStore = useAuthStore();

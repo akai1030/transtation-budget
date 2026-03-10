@@ -2,19 +2,16 @@ import { defineStore } from 'pinia';
 
 export const useAuthStore = defineStore('auth', {
     state: () => ({
-        isLoggedIn: false
+        isLoggedIn: false,
+        email: 'transtation2022@gmail.com'
     }),
     actions: {
-        login(password) {
-            if (password === 'nttudpca2022') {
-                this.isLoggedIn = true;
-                return true;
-            }
-            return false;
+        loginSuccess() {
+            this.isLoggedIn = true;
+            return true;
         },
         logout() {
-            this.isLoggedIn = false;
+            this.isLoggedIn = false
         }
-    },
-    // persist: true // If you have pinia-plugin-persistedstate installed, otherwise we'll use a simple client-side check or localStorage later if needed.
+    }
 });

@@ -110,7 +110,14 @@ model WorkLog {
   // 記錄誰操作了結算 (系統預留為操作者)
   settledById String?
   settledBy   User?    @relation("SettledBy", fields: [settledById], references: [id])
-
+  
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model CommonItem {
+  id        String   @id @default(cuid())
+  label     String
+  category  String
+  createdAt DateTime @default(now())
 }

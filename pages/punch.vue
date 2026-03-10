@@ -29,6 +29,7 @@
                  v-model="form.name" 
                  type="text" 
                  required
+                 @blur="fetchRecentLogs"
                  placeholder="例如：王大明" 
                  class="w-full border border-[#E8E2D8] focus:border-[#1B4588]/30 bg-[#F0ECE6] rounded-2xl px-5 py-4 text-lg font-bold text-[#1B4588] transition-colors outline-none placeholder:text-[#c4baa8]"
                >
@@ -84,19 +85,39 @@
             </button>
          </form>
       </div>
+
+      <!-- 最近紀錄區塊 -->
+      <div v-if="recentLogs.length > 0 && !isSuccess" class="mt-8 w-full animate-fade-in">
+        <h3 class="text-xs font-bold text-[#a09888] uppercase tracking-[0.2em] mb-4 text-center">您的近期登記 (未結算)</h3>
+        <div class="space-y-3">
+          <div v-for="log in recentLogs" :key="log.id" class="bg-white/60 backdrop-blur-sm border border-[#E8E2D8] rounded-2xl p-4 flex justify-between items-center group">
+            <div class="flex-1 min-w-0 pr-4">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-[10px] font-mono font-bold text-[#a09888]">{{ new Date(log.date).toLocaleDateString() }}</span>
+                <span class="font-bold text-[#6b6050] text-sm truncate">{{ log.description || '一般執行' }}</span>
+              </div>
+              <div class="text-xs text-[#b5aa9a] font-bold">{{ log.hours }} 小時</div>
+            </div>
+            <button @click="deleteLog(log.id)" class="bg-rose-50 text-rose-500 hover:bg-rose-100 p-2 rounded-xl transition-colors">
+              <PhTrash weight="bold" />
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref, reactive } from 'vue';
-import { PhPaperPlaneRight, PhSpinner, PhCheckCircle } from '@phosphor-icons/vue';
+import { PhPaperPlaneRight, PhSpinner, PhCheckCircle, PhTrash } from '@phosphor-icons/vue';
 
-// 隱藏的系統預設時薪（工讀生不用知道，結算時由系統帶入計算）
+// 隱藏的系統預設時薪
 const DEFAULT_HOURLY_RATE = 200;
 
 const isLoading = ref(false);
 const isSuccess = ref(false);
+const recentLogs = ref([]);
 
 const form = reactive({
     name: '',
@@ -104,6 +125,22 @@ const form = reactive({
     date: new Date().toISOString().split('T')[0],
     description: ''
 });
+
+const fetchRecentLogs = async () => {
+    if (!form.name.trim()) {
+        recentLogs.value = [];
+        return;
+    }
+    try {
+        const { data } = await useFetch('/api/hr/logs.get');
+        if (data.value) {
+            // 只過濾出符合姓名且尚未結算的紀錄
+            recentLogs.value = data.value.pending.filter(l => l.targetName === form.name.trim()).slice(0, 5);
+        }
+    } catch (e) {
+        console.error("Failed to fetch logs", e);
+    }
+};
 
 const submitPunch = async () => {
     if (!form.name || !form.hours) return;
@@ -113,7 +150,7 @@ const submitPunch = async () => {
         await $fetch('/api/hr/logs.post', {
             method: 'POST',
             body: {
-                targetName: form.name.trim(), // 外部人員一律使用 targetName
+                targetName: form.name.trim(),
                 hours: Number(form.hours),
                 hourlyRate: DEFAULT_HOURLY_RATE,
                 date: new Date(form.date).toISOString(),
@@ -121,10 +158,24 @@ const submitPunch = async () => {
             }
         });
         isSuccess.value = true;
+        await fetchRecentLogs();
     } catch (e) {
-        alert("登記失敗，請檢查網路連線或聯絡管理員。\n" + (e.message || ''));
+        alert("登記失敗，請檢查網路連線或聯絡管理員。");
     } finally {
         isLoading.value = false;
+    }
+};
+
+const deleteLog = async (id) => {
+    if (!confirm('確定要刪除這筆尚未結算的紀錄嗎？')) return;
+    try {
+        await $fetch('/api/hr/logs.delete', {
+            method: 'POST',
+            body: { id }
+        });
+        await fetchRecentLogs();
+    } catch (e) {
+        alert("刪除失敗");
     }
 };
 
