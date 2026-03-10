@@ -132,7 +132,7 @@ const fetchRecentLogs = async () => {
         return;
     }
     try {
-        const { data } = await useFetch('/api/hr/logs.get');
+        const { data } = await useFetch('/api/hr/get-logs');
         if (data.value) {
             // 只過濾出符合姓名且尚未結算的紀錄
             recentLogs.value = data.value.pending.filter(l => l.targetName === form.name.trim()).slice(0, 5);
@@ -147,7 +147,7 @@ const submitPunch = async () => {
     isLoading.value = true;
 
     try {
-        await $fetch('/api/hr/logs.post', {
+        await $fetch('/api/hr/post-logs', {
             method: 'POST',
             body: {
                 targetName: form.name.trim(),
@@ -169,7 +169,7 @@ const submitPunch = async () => {
 const deleteLog = async (id) => {
     if (!confirm('確定要刪除這筆尚未結算的紀錄嗎？')) return;
     try {
-        await $fetch('/api/hr/logs.delete', {
+        await $fetch('/api/hr/delete-log', {
             method: 'POST',
             body: { id }
         });

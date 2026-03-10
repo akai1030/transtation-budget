@@ -303,10 +303,10 @@ const checkoutError = ref('');
 const loadLogs = async () => {
     isLoading.value = true;
     try {
-        const { data } = await useFetch('/api/hr/logs.get');
-        if (data.value) {
-            pendingLogs.value = data.value.pending || [];
-            settledLogs.value = data.value.settled || [];
+        const data = await $fetch('/api/hr/get-logs');
+        if (data) {
+            pendingLogs.value = data.pending || [];
+            settledLogs.value = data.settled || [];
         }
     } catch (e) {
         console.error("Failed to load HR logs", e);
@@ -364,7 +364,7 @@ const submitWorkLog = async () => {
             payload.userId = store.currentUser?.id; 
         }
 
-        await $fetch('/api/hr/logs.post', {
+        await $fetch('/api/hr/post-logs', {
             method: 'POST',
             body: payload
         });
@@ -406,7 +406,7 @@ const submitCheckout = async () => {
     submitting.value = true;
     
     try {
-        await $fetch('/api/hr/checkout.post', {
+        await $fetch('/api/hr/post-checkout', {
             method: 'POST',
             body: {
                 logIds: pendingLogs.value.map(l => l.id),

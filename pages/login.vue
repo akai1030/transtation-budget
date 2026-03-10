@@ -30,11 +30,10 @@
             :key="index"
             class="w-10 h-10 rounded-xl border-2 flex items-center justify-center transition-all duration-300"
             :class="[
-                inputSequence.length > index ? 'bg-[#1B4588] border-[#1B4588] text-white' : 'bg-[#F0ECE6] border-[#E8E2D8] text-[#D4CEC3]'
+                inputSequence.length > index ? 'bg-[#1B4588] border-[#1B4588] text-white shadow-lg shadow-[#1B4588]/20' : 'bg-[#F0ECE6] border-[#E8E2D8]'
             ]"
           >
             <PhCheck v-if="inputSequence.length > index" weight="bold" />
-            <span v-else class="text-xs font-mono font-bold">{{ char.toUpperCase() }}</span>
           </div>
       </div>
 
