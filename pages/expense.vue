@@ -51,17 +51,39 @@
         </div>
       </header>
 
+      <!-- 交易類型切換 -->
+      <div class="stagger-item flex gap-2" style="--delay: 1">
+        <button @click="entryType = 'project'" 
+          class="flex-1 py-2.5 rounded-2xl text-[11px] font-bold tracking-wider transition-all border"
+          :class="entryType === 'project' ? 'bg-[#1B4588] text-white border-[#1B4588]' : 'bg-white text-[#a09888] border-[#E8E2D8] hover:bg-[#F0ECE6]'">
+          專案記帳
+        </button>
+        <button @click="entryType = 'company_income'" 
+          class="flex-1 py-2.5 rounded-2xl text-[11px] font-bold tracking-wider transition-all border"
+          :class="entryType === 'company_income' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-[#a09888] border-[#E8E2D8] hover:bg-[#F0ECE6]'">
+          公司收入
+        </button>
+        <button @click="entryType = 'payroll'" 
+          class="flex-1 py-2.5 rounded-2xl text-[11px] font-bold tracking-wider transition-all border"
+          :class="entryType === 'payroll' ? 'bg-amber-600 text-white border-amber-600' : 'bg-white text-[#a09888] border-[#E8E2D8] hover:bg-[#F0ECE6]'">
+          薪資獎金
+        </button>
+      </div>
+
       <!-- 1. 金額輸入卡片 -->
-      <div class="stagger-item bg-white rounded-[28px] p-5 shadow-sm border border-[#E8E2D8] relative overflow-hidden" style="--delay: 1">
+      <div class="stagger-item bg-white rounded-[28px] p-5 shadow-sm border border-[#E8E2D8] relative overflow-hidden" style="--delay: 1.5">
         <!-- 卡片裝飾圓點 -->
-        <div class="absolute top-3 right-3 w-2 h-2 rounded-full bg-[#1B4588] opacity-40"></div>
+        <div class="absolute top-3 right-3 w-2 h-2 rounded-full opacity-40" 
+             :class="{'bg-[#1B4588]': entryType === 'project', 'bg-emerald-500': entryType === 'company_income', 'bg-amber-500': entryType === 'payroll'}"></div>
         
         <!-- 金額直接輸入 -->
         <div class="flex items-center gap-2 py-2">
-          <span class="text-3xl sm:text-4xl font-mono font-black text-[#D4CEC3] shrink-0">$</span>
+          <span class="text-3xl sm:text-4xl font-mono font-black shrink-0"
+                :class="{'text-[#D4CEC3]': entryType === 'project', 'text-emerald-200': entryType === 'company_income', 'text-amber-200': entryType === 'payroll'}">$</span>
           <input type="text" inputmode="decimal" v-model="displayValue"
             placeholder="0"
-            class="flex-1 min-w-0 text-3xl sm:text-4xl font-mono font-black tracking-tighter text-[#1B4588] bg-transparent outline-none placeholder:text-[#D4CEC3] text-right w-full" />
+            class="flex-1 min-w-0 text-3xl sm:text-4xl font-mono font-black tracking-tighter bg-transparent outline-none placeholder:text-[#D4CEC3] text-right w-full"
+            :class="{'text-[#1B4588]': entryType === 'project', 'text-emerald-600': entryType === 'company_income', 'text-amber-600': entryType === 'payroll'}" />
         </div>
         
         <!-- 計算結果提示 -->
@@ -90,49 +112,65 @@
         </Transition>
       </div>
 
-      <!-- 2. 專案 & 子專案 -->
-      <div class="stagger-item bg-white rounded-[28px] p-5 shadow-sm border border-[#E8E2D8] relative overflow-hidden" style="--delay: 2">
-        <div class="text-[10px] font-bold text-[#a09888] uppercase tracking-[0.2em] mb-3">專案 / 子專案</div>
-        
-        <!-- 專案選擇 -->
-        <div class="relative mb-3">
-          <select v-model="selectedProjectId" 
-            class="w-full bg-[#F0ECE6] rounded-2xl py-3 px-4 text-sm font-bold appearance-none outline-none text-[#1B4588] border border-[#E8E2D8] focus:border-[#1B4588]/30 transition-colors">
-            <option value="" disabled>選擇專案...</option>
-            <option v-for="p in store.projects" :key="p.id" :value="p.id">{{ p.name }}</option>
-          </select>
-          <PhCaretDown class="absolute right-4 top-1/2 -translate-y-1/2 text-[#a09888] pointer-events-none text-sm" />
-        </div>
+      <!-- 2. 專案 & 子專案 (僅專案記帳顯示) -->
+      <Transition name="expand" mode="out-in">
+        <div v-if="entryType === 'project'" class="stagger-item bg-white rounded-[28px] p-5 shadow-sm border border-[#E8E2D8] relative overflow-hidden" style="--delay: 2">
+          <div class="text-[10px] font-bold text-[#a09888] uppercase tracking-[0.2em] mb-3">專案 / 子專案</div>
+          
+          <!-- 專案選擇 -->
+          <div class="relative mb-3">
+            <select v-model="selectedProjectId" 
+              class="w-full bg-[#F0ECE6] rounded-2xl py-3 px-4 text-sm font-bold appearance-none outline-none text-[#1B4588] border border-[#E8E2D8] focus:border-[#1B4588]/30 transition-colors">
+              <option value="" disabled>選擇專案...</option>
+              <option v-for="p in store.projects" :key="p.id" :value="p.id">{{ p.name }}</option>
+            </select>
+            <PhCaretDown class="absolute right-4 top-1/2 -translate-y-1/2 text-[#a09888] pointer-events-none text-sm" />
+          </div>
 
-        <!-- 子專案 pill -->
-        <div v-if="selectedProjectId && budgetLines.length > 0">
-          <div class="text-[10px] font-bold text-[#a09888] uppercase tracking-[0.2em] mb-1.5">預算分支</div>
-          <div class="flex flex-wrap gap-2">
-            <button v-for="line in budgetLines" :key="line.category"
-              @click="selectedBranch = line.category"
-              class="px-3.5 py-2 rounded-full text-xs font-bold transition-all border"
-              :class="selectedBranch === line.category 
-                ? 'bg-[#1B4588] text-white border-[#1B4588] shadow-md shadow-[#1B4588]/15' 
-                : 'bg-[#F0ECE6] border-[#E8E2D8] text-[#6b6050] hover:border-[#1B4588]/30'">
-              {{ line.category }}
-              <span class="ml-1 opacity-50 font-mono text-[10px]">
-                {{ formatCompact(line.budget - line.used) }}
+          <!-- 子專案 pill -->
+          <div v-if="selectedProjectId && budgetLines.length > 0">
+            <div class="text-[10px] font-bold text-[#a09888] uppercase tracking-[0.2em] mb-1.5">預算分支</div>
+            <div class="flex flex-wrap gap-2">
+              <button v-for="line in budgetLines" :key="line.category"
+                @click="selectedBranch = line.category"
+                class="px-3.5 py-2 rounded-full text-xs font-bold transition-all border"
+                :class="selectedBranch === line.category 
+                  ? 'bg-[#1B4588] text-white border-[#1B4588] shadow-md shadow-[#1B4588]/15' 
+                  : 'bg-[#F0ECE6] border-[#E8E2D8] text-[#6b6050] hover:border-[#1B4588]/30'">
+                {{ line.category }}
+                <span class="ml-1 opacity-50 font-mono text-[10px]">
+                  {{ formatCompact(line.budget - line.used) }}
+                </span>
+              </button>
+            </div>
+            <!-- 剩餘預算 -->
+            <div v-if="selectedBranch && selectedBranchInfo" class="mt-2 text-[10px] font-mono px-1 flex justify-between">
+              <span class="text-[#a09888]">預算 ${{ formatNumber(selectedBranchInfo.budget) }}</span>
+              <span :class="branchRemaining < 0 ? 'text-crimson-alert font-bold' : 'text-[#1B4588]'">
+                剩餘 ${{ formatNumber(branchRemaining) }}
               </span>
-            </button>
+            </div>
           </div>
-          <!-- 剩餘預算 -->
-          <div v-if="selectedBranch && selectedBranchInfo" class="mt-2 text-[10px] font-mono px-1 flex justify-between">
-            <span class="text-[#a09888]">預算 ${{ formatNumber(selectedBranchInfo.budget) }}</span>
-            <span :class="branchRemaining < 0 ? 'text-crimson-alert font-bold' : 'text-[#1B4588]'">
-              剩餘 ${{ formatNumber(branchRemaining) }}
-            </span>
+
+          <div v-else-if="!selectedProjectId" class="text-xs text-[#b5aa9a] text-center py-3 font-medium">
+            請先選擇專案
           </div>
         </div>
 
-        <div v-else-if="!selectedProjectId" class="text-xs text-[#b5aa9a] text-center py-3 font-medium">
-          請先選擇專案
+        <!-- 發放薪水對象選擇 -->
+        <div v-else-if="entryType === 'payroll'" class="stagger-item bg-white rounded-[28px] p-5 shadow-sm border border-[#E8E2D8] relative overflow-hidden" style="--delay: 2">
+          <div class="text-[10px] font-bold text-[#a09888] uppercase tracking-[0.2em] mb-3">發放對象</div>
+          <div class="relative">
+            <select v-model="selectedPayee" 
+              class="w-full bg-[#F0ECE6] rounded-2xl py-3 px-4 text-sm font-bold appearance-none outline-none text-amber-700 border border-[#E8E2D8] focus:border-amber-600/30 transition-colors">
+              <option value="" disabled>選擇人員...</option>
+              <option v-for="u in store.users" :key="u.id" :value="u.name">{{ u.name }}</option>
+              <option value="其他外部人員">其他外部人員</option>
+            </select>
+            <PhCaretDown class="absolute right-4 top-1/2 -translate-y-1/2 text-[#a09888] pointer-events-none text-sm" />
+          </div>
         </div>
-      </div>
+      </Transition>
 
       <!-- 3. 會計科目 -->
       <div class="stagger-item bg-white rounded-[28px] p-5 shadow-sm border border-[#E8E2D8] relative overflow-hidden" style="--delay: 3">
@@ -177,10 +215,13 @@
       <div class="stagger-item grid grid-cols-3 gap-3" style="--delay: 4">
         <!-- 備註 -->
         <div class="col-span-2 bg-white rounded-[28px] p-5 !py-3.5 shadow-sm border border-[#E8E2D8] relative overflow-hidden">
-          <div class="text-[10px] font-bold text-[#a09888] uppercase tracking-[0.2em] mb-1.5">備註</div>
+          <div class="text-[10px] font-bold text-[#a09888] uppercase tracking-[0.2em] mb-1.5">
+            {{ entryType === 'project' ? '備註' : (entryType === 'company_income' ? '收入來源' : '支付事由 / 對象') }}
+          </div>
           <input type="text" v-model="note" 
-            placeholder="例：高鐵到台北"
-            class="w-full bg-transparent text-sm font-medium text-[#1B4588] outline-none placeholder:text-[#c4baa8]" />
+            :placeholder="entryType === 'project' ? '例：高鐵到台北' : (entryType === 'company_income' ? '例：專案獎金' : '例：2月薪水')"
+            class="w-full bg-transparent text-sm font-medium outline-none placeholder:text-[#c4baa8]" 
+            :class="{'text-[#1B4588]': entryType === 'project', 'text-emerald-700': entryType === 'company_income', 'text-amber-700': entryType === 'payroll'}" />
         </div>
 
         <!-- 日期 -->
@@ -200,15 +241,21 @@
       <button @click="submit" 
         :disabled="!isValid || store.isSyncing"
         class="stagger-item w-full py-4 rounded-full font-bold text-lg shadow-xl transition-all flex items-center justify-center gap-3 disabled:opacity-40 disabled:scale-100"
-        :class="isValid 
-          ? 'bg-[#1B4588] text-white shadow-[#1B4588]/20 hover:shadow-[#1B4588]/40 hover:scale-[1.02] active:scale-95' 
-          : 'bg-[#E8E2D8] text-[#b5aa9a]'"
+        :class="[
+          isValid && entryType === 'project' ? 'bg-[#1B4588] text-white shadow-[#1B4588]/20 hover:shadow-[#1B4588]/40 hover:scale-[1.02] active:scale-95' : '',
+          isValid && entryType === 'company_income' ? 'bg-emerald-600 text-white shadow-emerald-600/20 hover:shadow-emerald-600/40 hover:scale-[1.02] active:scale-95' : '',
+          isValid && entryType === 'payroll' ? 'bg-amber-600 text-white shadow-amber-600/20 hover:shadow-amber-600/40 hover:scale-[1.02] active:scale-95' : '',
+          !isValid ? 'bg-[#E8E2D8] text-[#b5aa9a]' : ''
+        ]"
         style="--delay: 5">
         <PhSpinner v-if="store.isSyncing" class="animate-spin text-xl" />
         <template v-else>
           <span>確認送出</span>
-          <span v-if="isValid" class="bg-white/20 px-3 py-1 rounded-full text-sm font-mono">
+          <span v-if="isValid && entryType === 'project'" class="bg-white/20 px-3 py-1 rounded-full text-sm font-mono">
             {{ selectedCategory }} · ${{ formatNumber(computedAmount) }}
+          </span>
+          <span v-if="isValid && entryType !== 'project'" class="bg-white/20 px-3 py-1 rounded-full text-sm font-mono">
+            {{ entryType === 'company_income' ? '公司收入' : '人事薪資' }} · ${{ formatNumber(computedAmount) }}
           </span>
         </template>
       </button>
@@ -227,6 +274,9 @@ const router = useRouter();
 definePageMeta({ layout: 'default' });
 
 // ── 狀態 ──
+
+const entryType = ref('project'); // 'project', 'company_income', 'payroll'
+const selectedPayee = ref(''); // 發薪對象
 
 // 計算機
 const displayValue = ref('');
@@ -261,6 +311,9 @@ const userCategories = ref([]); // 使用者自訂的科目
 
 // 科目完整列表 = 預設 + 使用者自訂
 const allCategories = computed(() => {
+  if (entryType.value === 'company_income') return ['公司外快', '利息收入', '其他收入'];
+  if (entryType.value === 'payroll') return ['定期薪資', '專案獎金', '年終獎金', '三節獎金', '其他補助'];
+
   const base = store.commonItems?.length > 0 ? store.commonItems : [
     '交通費', '講師費', '餐費', '住宿費', '場地費', '器材租借', '雜支', '專案執行費', '行政管理費', '稅金'
   ];
@@ -270,6 +323,13 @@ const allCategories = computed(() => {
     if (!combined.includes(c)) combined.push(c);
   }
   return combined;
+});
+
+// 自動切換預設科目
+watch(entryType, (val) => {
+   if (val === 'company_income') selectedCategory.value = '公司外快';
+   else if (val === 'payroll') selectedCategory.value = '定期薪資';
+   else selectedCategory.value = '';
 });
 
 // 專案變更時重設子專案
@@ -411,7 +471,14 @@ const formatCompact = (n) => new Intl.NumberFormat('en-US', { notation: 'compact
 // ── 驗證 ──
 
 const isValid = computed(() => {
-  return computedAmount.value > 0 && selectedProjectId.value && selectedCategory.value;
+  if (computedAmount.value <= 0 || !selectedCategory.value) return false;
+  
+  if (entryType.value === 'project') {
+    return !!selectedProjectId.value; // 專案模式必須選專案
+  } else if (entryType.value === 'payroll') {
+    return !!selectedPayee.value; // 薪資模式必須選對象
+  }
+  return true; // 其他模式不用選專案
 });
 
 // ── 送出 ──
@@ -420,17 +487,45 @@ const submit = async () => {
   if (!isValid.value || store.isSyncing) return;
 
   try {
-    await store.addTransaction({
-      date: selectedDate.value,
-      payer: store.currentUser?.name,
-      items: [{
-        projectId: selectedProjectId.value,
-        amount: computedAmount.value,
-        branch: selectedBranch.value || selectedCategory.value,
-        subject: selectedCategory.value,
-        description: note.value || '快速記帳',
-      }]
-    });
+    store.isSyncing = true;
+    if (entryType.value === 'project') {
+      await store.addTransaction({
+        date: selectedDate.value,
+        payer: store.currentUser?.name,
+        items: [{
+          projectId: selectedProjectId.value,
+          amount: computedAmount.value,
+          branch: selectedBranch.value || selectedCategory.value,
+          subject: selectedCategory.value,
+          description: note.value || '快速記帳',
+        }]
+      });
+    } else {
+      // Direct API Call for Company Income/Payroll
+      // These do NOT decrease user pettyCash
+      const finalDescription = note.value || (entryType.value === 'company_income' ? '新增公司收入' : '發放薪資獎金');
+      const subjectName = entryType.value === 'payroll' && selectedPayee.value 
+                          ? `[${selectedPayee.value}] ${selectedCategory.value}`
+                          : selectedCategory.value;
+
+      const response = await $fetch('/api/transactions', {
+         method: 'POST',
+         body: {
+            action: 'company_record',
+            date: selectedDate.value,
+            amount: computedAmount.value,
+            isIncome: entryType.value === 'company_income',
+            category: subjectName,
+            description: finalDescription,
+            payer: store.currentUser?.name, // Who recorded it
+            payee: selectedPayee.value // Optional receiving user
+         }
+      });
+      if (!response.success) throw new Error(response.message || 'Error occurred');
+      
+      // Force reload data to update the dashboard immediately
+      await store.loadData(true);
+    }
 
     // 成功：重設金額和備註
     displayValue.value = '';
@@ -441,6 +536,8 @@ const submit = async () => {
     navigateTo('/');
   } catch (e) {
     alert('記帳失敗：' + e.message);
+  } finally {
+    store.isSyncing = false;
   }
 };
 </script>

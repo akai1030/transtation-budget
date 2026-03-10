@@ -13,8 +13,36 @@ export default defineEventHandler(async (event) => {
         return await handleTransfer(body);
     }
 
+    if (body.action === 'company_record') {
+        return await handleCompanyRecord(body);
+    }
+
     return { success: false, message: "Unknown action" }
 })
+
+async function handleCompanyRecord(payload: any) {
+    const { date, amount, isIncome, category, description, payer, payee } = payload
+
+    const user = await prisma.user.findUnique({ where: { name: payer } })
+    if (!user) throw createError({ statusCode: 400, statusMessage: "User not found" })
+
+    // Create a transaction purely for company history, no impact on pettyCash
+    const newTx = await prisma.transaction.create({
+        data: {
+            date: new Date(date),
+            amount: Number(amount),
+            isIncome: isIncome === true,
+            description: description,
+            subject: isIncome ? '公司收入' : (payee ? `發給 ${payee}` : '公司支出'),
+            userId: user.id, // Who recorded this (for auditing, not affecting balance)
+            projectId: null, // Pure company event
+            budgetLineCategory: category, // Frontend already appended [Payee] to category if payroll
+            currency: "TWD"
+        }
+    })
+
+    return { success: true, transactions: [newTx] }
+}
 
 async function handleTransfer(payload: any) {
     const { date, toUser, amount, description, type } = payload
@@ -24,7 +52,9 @@ async function handleTransfer(payload: any) {
 
     const result = await prisma.$transaction(async (tx) => {
         // Transfer is always an "Income" for the user (Top-up or Reimbursement)
-        // From Company (projectId: null) to User
+        // From Company (projectId: null) to User.
+        // NOTE: In `init.get.ts`, we exclude 'Internal Transfer' from company income calculations
+        // so that total company assets don't artificially increase when we reimburse a user.
         const newTx = await tx.transaction.create({
             data: {
                 date: new Date(date),

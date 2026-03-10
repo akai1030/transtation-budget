@@ -58,51 +58,128 @@
       </div>
 
       <!-- 公司淨值 -->
-      <div class="stagger-item col-span-1 bg-white rounded-[28px] p-6 shadow-sm border border-[#E8E2D8] relative overflow-hidden group" style="--delay: 2">
+      <div class="stagger-item col-span-1 bg-white rounded-[28px] p-6 shadow-sm border border-[#E8E2D8] relative group" style="--delay: 2">
         <div class="absolute top-3 right-3 w-2 h-2 rounded-full bg-amber-500 opacity-40"></div>
         <div class="relative z-10">
-          <div class="text-[10px] font-bold text-[#a09888] uppercase tracking-[0.2em] mb-1">目前公司淨值 (已扣代墊)</div>
+          <div class="flex items-center gap-1.5 mb-1 relative group/tooltip">
+            <div class="text-[10px] font-bold text-[#a09888] uppercase tracking-[0.2em]">目前結餘 (已含代墊)</div>
+            <PhInfo class="text-[#b5aa9a] text-xs cursor-help" />
+            <div class="absolute bottom-full left-0 mb-2 w-48 bg-[#1B4588] text-white text-[10px] p-2 rounded-lg opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all pointer-events-none z-50">
+               = (專案已收保留款 + 公司收入) - (專案與公司實際支出) - (撥款/還款)<br><br>
+               代表公司目前實際擁有、未被花掉的現金資產，已計入發給員工的代墊還款。
+            </div>
+          </div>
           <div class="text-3xl font-mono font-bold tracking-tighter" :class="companyNetValue >= 0 ? 'text-amber-600' : 'text-rose-500'">
             {{ companyNetValue < 0 ? '-' : '' }}${{ formatNumber(Math.abs(companyNetValue)) }}
           </div>
           <div class="mt-2 text-[10px] text-[#b5aa9a] font-medium">
-             資產 ${{ formatCompact(store.totalCompanyRetention) }} - 代墊 ${{ formatCompact(totalUserLiability) }}
+             目前尚欠成員代墊款：${{ formatCompact(totalUserLiability) }}
           </div>
         </div>
       </div>
 
       <!-- 預期淨值 -->
-      <div class="stagger-item col-span-1 bg-white rounded-[28px] p-6 shadow-sm border border-[#E8E2D8] relative overflow-hidden group" style="--delay: 3">
+      <div class="stagger-item col-span-1 bg-white rounded-[28px] p-6 shadow-sm border border-[#E8E2D8] relative group" style="--delay: 3">
         <div class="absolute top-3 right-3 w-2 h-2 rounded-full bg-emerald-500 opacity-40"></div>
         <div class="relative z-10">
-          <div class="text-[10px] font-bold text-[#a09888] uppercase tracking-[0.2em] mb-1">預期公司淨值 (含未收款)</div>
+          <div class="flex items-center gap-1.5 mb-1 relative group/tooltip">
+            <div class="text-[10px] font-bold text-[#a09888] uppercase tracking-[0.2em]">預期公司總淨值</div>
+            <PhInfo class="text-[#b5aa9a] text-xs cursor-help" />
+            <div class="absolute bottom-full left-0 mb-2 w-48 bg-[#1B4588] text-white text-[10px] p-2 rounded-lg opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all pointer-events-none z-50">
+               = 目前結餘 + (未來預計會收進來的專案保留款)<br><br>
+               代表目前現金與未來應收款（屬於公司的利潤部分）的加總。
+            </div>
+          </div>
           <div class="text-3xl font-mono font-bold text-emerald-600 tracking-tighter">
             {{ expectedNetValue < 0 ? '-' : '' }}${{ formatNumber(Math.abs(expectedNetValue)) }}
           </div>
           <div class="mt-2 text-[10px] text-[#b5aa9a] font-medium">
-             目前 ${{ formatCompact(companyNetValue) }} + 待撥 ${{ formatCompact(store.totalPendingRetention) }}
+             目前結餘 ${{ formatCompact(companyNetValue) }} + 待撥保留款 ${{ formatCompact(store.totalPendingRetention) }}
           </div>
         </div>
       </div>
 
       <!-- 未收帳款 -->
-      <div class="stagger-item col-span-1 sm:col-span-2 lg:col-span-3 bg-white rounded-[28px] p-6 shadow-sm border border-[#E8E2D8] relative overflow-hidden group" style="--delay: 4">
+      <div class="stagger-item col-span-1 sm:col-span-2 lg:col-span-3 bg-white rounded-[28px] p-6 shadow-sm border border-[#E8E2D8] relative group" style="--delay: 4">
         <div class="absolute top-3 right-3 w-2 h-2 rounded-full bg-[#1B4588] opacity-30"></div>
         <div class="relative z-10 flex justify-between items-end">
           <div>
-              <div class="text-[10px] font-bold text-[#a09888] uppercase tracking-[0.2em] mb-1">專案未收帳款</div>
+              <div class="flex items-center gap-1.5 mb-1 relative group/tooltip">
+                <div class="text-[10px] font-bold text-[#a09888] uppercase tracking-[0.2em]">專案未收帳款總額</div>
+                <PhInfo class="text-[#b5aa9a] text-xs cursor-help" />
+                <div class="absolute bottom-full left-0 mb-2 w-56 bg-[#1B4588] text-white text-[10px] p-2 rounded-lg opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all pointer-events-none z-50">
+                   = 各個未歸檔專案中，狀態為「Pending (待收款)」的總金額。這筆錢收進來後，將根據專案設定的保留%數，撥入公司資產。
+                </div>
+              </div>
               <div class="text-3xl font-mono font-bold text-[#1B4588] tracking-tighter">
                 ${{ formatNumber(store.totalPendingReceivables) }}
               </div>
           </div>
           <div class="text-right">
               <div class="text-[10px] text-[#b5aa9a] font-medium">
-                 其中約 ${{ formatCompact(store.totalPendingRetention) }} 將撥入公司資產
+                 其中估計 ${{ formatCompact(store.totalPendingRetention) }} 將成為公司資產
               </div>
           </div>
         </div>
       </div>
 
+    </div>
+
+    <!-- 收入 / 支出 雙欄 (從原資金頁面移入) -->
+    <div class="stagger-item grid grid-cols-2 gap-4 mt-6" style="--delay: 4.5">
+        <!-- 收入 -->
+        <div class="bg-white p-5 pb-4 rounded-[28px] border border-[#E8E2D8] relative group">
+             <div class="absolute top-3 right-3 w-2 h-2 rounded-full bg-emerald-400 opacity-40"></div>
+             <div class="relative z-10 flex flex-col justify-between h-full gap-2">
+                <div>
+                  <div class="flex items-center gap-1.5 mb-1 relative group/tooltip">
+                    <div class="text-[10px] font-bold text-[#a09888] uppercase tracking-[0.2em]">累積總收入</div>
+                    <PhInfo class="text-[#b5aa9a] text-xs cursor-help" />
+                    <div class="absolute bottom-full left-0 mb-2 w-48 bg-[#1B4588] text-white text-[10px] p-2 rounded-lg opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all pointer-events-none z-50">
+                       = (專案結案提撥的保留款) + (公司外快/其他收入)<br><br>
+                       代表公司成立至今，總共收進來過多少錢。
+                    </div>
+                  </div>
+                  <div class="text-2xl font-mono font-bold text-emerald-500 tracking-tighter">
+                     +${{ formatNumber(totalIncome) }}
+                  </div>
+                </div>
+                <!-- 拆分明細 -->
+                <div class="space-y-1 w-full pt-1 border-t border-[#F0ECE6]/50">
+                    <div class="flex justify-between items-center text-[10px]">
+                        <span class="text-[#b5aa9a]">專案提撥</span>
+                        <span class="font-bold text-[#6b6050]">${{ formatNumber(retentionIncome) }}</span>
+                    </div>
+                    <div class="flex justify-between items-center text-[10px]">
+                        <span class="text-[#b5aa9a]">外快/利息</span>
+                        <span class="font-bold text-[#6b6050]">${{ formatNumber(otherIncome) }}</span>
+                    </div>
+                </div>
+             </div>
+        </div>
+
+        <!-- 支出 -->
+        <div class="bg-white p-5 rounded-[28px] border border-[#E8E2D8] relative group">
+             <div class="absolute top-3 right-3 w-2 h-2 rounded-full bg-rose-400 opacity-40"></div>
+             <div class="relative z-10 flex flex-col gap-4 h-full">
+                <div>
+                  <div class="flex items-center gap-1.5 mb-1 relative group/tooltip">
+                    <div class="text-[10px] font-bold text-[#a09888] uppercase tracking-[0.2em]">累積總支出</div>
+                    <PhInfo class="text-[#b5aa9a] text-xs cursor-help" />
+                    <div class="absolute bottom-full right-0 mb-2 w-48 bg-[#1B4588] text-white text-[10px] p-2 rounded-lg opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all pointer-events-none z-50">
+                       = 所有標記為「公司支出、薪水」或未綁定專案的花費。<br><br>
+                       代表公司自己的內部營運成本。
+                    </div>
+                  </div>
+                  <div class="text-2xl font-mono font-bold text-rose-500 tracking-tighter">
+                     -${{ formatNumber(store.companyExpenses) }}
+                  </div>
+                </div>
+                <div class="text-[10px] text-[#b5aa9a] mt-auto">
+                   公司營運與人事成本
+                </div>
+             </div>
+        </div>
     </div>
 
     <!-- 專案列表 -->
@@ -152,9 +229,34 @@
 
 <script setup>
 import { computed, ref } from 'vue';
-import { PhCoffee, PhCheckCircle, PhArrowUUpLeft, PhCaretDown, PhUserSwitch } from '@phosphor-icons/vue';
+import { PhCoffee, PhCheckCircle, PhArrowUUpLeft, PhCaretDown, PhUserSwitch, PhInfo } from '@phosphor-icons/vue';
 
 const store = useBudgetStore();
+
+// === 原資金頁的統計邏輯 (修正版) ===
+const retentionIncome = computed(() => {
+    // 真實的總專案提撥款 (迴圈加總各專案的 Revenue * retention)
+    let total = 0;
+    for (const pid in store.projectStats) {
+        const stats = store.projectStats[pid];
+        total += Math.floor(stats.revenue * ((stats.retention || 10) / 100));
+    }
+    return total;
+});
+
+const otherIncome = computed(() => {
+    // 扣除掉內部轉帳後的純公司外快
+    return store.transactions
+        .filter(t => t.projectId === null && t.isIncome && t.budgetLineCategory !== 'Internal Transfer')
+        .reduce((sum, t) => sum + t.amount, 0);
+});
+
+const totalIncome = computed(() => {
+    return retentionIncome.value + otherIncome.value;
+});
+// ==========================
+
+const timeRange = ref('all'); // 'month', 'year', 'all'
 const todayDate = new Date().toLocaleDateString('zh-TW', { weekday: 'long', month: 'long', day: 'numeric' });
 
 const myPettyCash = computed(() => store.currentUser?.pettyCash || 0);
@@ -192,7 +294,8 @@ const totalUserLiability = computed(() => {
 });
 
 const companyNetValue = computed(() => {
-    return store.totalCompanyRetention - totalUserLiability.value;
+    // 公司的真實留存資產 (後端已經扣除所有的支出與內部還款流出)
+    return store.totalCompanyRetention;
 });
 
 const expectedNetValue = computed(() => {

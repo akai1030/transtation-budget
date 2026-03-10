@@ -118,6 +118,27 @@ export const useBudgetStore = defineStore('budget', {
             userCookie.value = user.name;
         },
 
+        // 新增使用者
+        async createUser(name) {
+            this.isSyncing = true;
+            try {
+                const res = await $fetch('/api/users', {
+                    method: 'POST',
+                    body: { name }
+                });
+                if (res.success && res.user) {
+                    this.users.push(res.user);
+                    return res.user;
+                }
+            } catch (err) {
+                console.error('Failed to create user:', err);
+                const apiError = err.data?.message || err.message || JSON.stringify(err);
+                throw new Error(apiError);
+            } finally {
+                this.isSyncing = false;
+            }
+        },
+
         // 登出
         logout() {
             this.currentUser = null;

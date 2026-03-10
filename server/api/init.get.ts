@@ -145,6 +145,16 @@ export default defineEventHandler(async (event) => {
         let otherCompanyIncome = 0;
 
         for (const tx of systemTransactions) {
+            if (tx.budgetLineCategory === 'Internal Transfer') {
+                // Internal Transfers (Top-up/Reimburse) are Income to User, meaning Outflow from Company
+                if (tx.isIncome) {
+                    companyExpenses += tx.amount;
+                } else {
+                    otherCompanyIncome += tx.amount;
+                }
+                continue;
+            }
+
             if (tx.isIncome) {
                 otherCompanyIncome += tx.amount;
             } else {

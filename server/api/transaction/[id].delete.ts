@@ -13,23 +13,26 @@ export default defineEventHandler(async (event) => {
             if (!transaction) throw new Error("Transaction not found")
 
             // 2. Revert User Balance
-            // If it was an expense (isIncome=false), we incremented pettyCash (claims).
-            // So to revert, we decrement.
-            // If isIncome=true, we decremented pettyCash (owed to company? or just received cash?). 
-            // Wait, current logic: Expense -> User Paid -> User Petty Cash (Claims) INCREASES.
-            // So Revert Expense -> User Petty Cash DECREASES.
+            // Only revert if the transaction actually affected the user's pettyCash.
+            // Pure company records (projectId: null AND category !== 'Internal Transfer') do NOT affect pettyCash.
+            const isPureCompanyRecord = transaction.projectId === null && transaction.budgetLineCategory !== 'Internal Transfer';
 
-            if (!transaction.isIncome) {
-                await tx.user.update({
-                    where: { id: transaction.userId },
-                    data: { pettyCash: { decrement: transaction.amount } }
-                })
-            } else {
-                // Income logic not fully defined yet, assuming opposite
-                await tx.user.update({
-                    where: { id: transaction.userId },
-                    data: { pettyCash: { increment: transaction.amount } }
-                })
+            if (!isPureCompanyRecord) {
+                // In handleExpense (isIncome=false), we DECREMENTED pettyCash (cash goes out).
+                // So to revert an expense, we INCREMENT pettyCash back.
+                // In handleTransfer (isIncome=true), we INCREMENTED pettyCash (cash received).
+                // So to revert an income, we DECREMENT pettyCash.
+                if (!transaction.isIncome) {
+                    await tx.user.update({
+                        where: { id: transaction.userId },
+                        data: { pettyCash: { increment: transaction.amount } }
+                    })
+                } else {
+                    await tx.user.update({
+                        where: { id: transaction.userId },
+                        data: { pettyCash: { decrement: transaction.amount } }
+                    })
+                }
             }
 
             // 3. Delete Transaction

@@ -16,10 +16,10 @@
           </div>
        </div>
        <div class="text-right flex-shrink-0 pl-2">
-          <div class="font-mono font-bold text-sm" :class="tx.isIncome ? 'text-emerald-500' : 'text-[#6b6050]'">
-             {{ tx.isIncome ? '+' : '-' }}${{ formatNumber(tx.amount) }}
+          <div class="font-mono font-bold text-sm" :class="isDisplayIncome(tx) ? 'text-emerald-500' : 'text-[#6b6050]'">
+             {{ isDisplayIncome(tx) ? '+' : '-' }}${{ formatNumber(tx.amount) }}
           </div>
-          <div class="text-[9px] text-[#D4CEC3]">{{ tx.payer || tx.user?.name }}</div>
+          <div class="text-[9px] text-[#D4CEC3]">{{ tx.payer || tx.user?.name || tx.relatedUser }}</div>
        </div>
     </div>
     <div v-if="transactions.length === 0" class="text-center text-[#b5aa9a] text-xs py-10">尚無交易紀錄</div>
@@ -36,9 +36,18 @@ const emit = defineEmits(['click-item']);
 const formatNumber = (n) => new Intl.NumberFormat('en-US').format(n);
 const formatDate = (d) => new Date(d).toLocaleDateString('zh-TW', { month: 'numeric', day: 'numeric' });
 
+// 判斷此交易在列表上應顯示為收入 (綠色/+) 還是支出 (深色/-)
+// 由於 Internal Transfer 在資料庫層對使用者是 isIncome: true，但對公司是現金流出
+const isDisplayIncome = (tx) => {
+   if (tx.category === 'Internal Transfer' || tx.budgetLineCategory === 'Internal Transfer') {
+      return false; // 公司撥款/還款給員工，對公司而言是流出
+   }
+   return tx.isIncome;
+};
+
 const getStatusColor = (tx) => {
   if (tx.status === 'syncing') return 'bg-amber-400 animate-pulse';
-  if (tx.isIncome) return 'bg-emerald-400';
+  if (isDisplayIncome(tx)) return 'bg-emerald-400';
   return 'bg-[#1B4588]';
 };
 </script>

@@ -64,6 +64,15 @@
       </div>
     </div>
 
+    <!-- 成員列表工具區 -->
+    <div class="px-5 mb-3 flex items-center justify-between stagger-item" style="--delay: 1.5">
+      <h2 class="text-sm font-bold text-[#1B4588]">所有成員</h2>
+      <button @click="showAddMemberModal = true" 
+              class="text-xs font-bold text-white bg-[#1B4588] px-4 py-2 rounded-full shadow-sm hover:shadow-md hover:bg-[#153a70] transition-colors flex items-center gap-1">
+        <PhPlus weight="bold" /> 新增成員
+      </button>
+    </div>
+
     <!-- 成員列表 -->
     <div class="px-5 space-y-3">
       <div v-for="(user, idx) in sortedUsers" :key="user.name"
@@ -237,17 +246,55 @@
                  確認{{ transferForm.type === 'reimburse' ? '還款' : '撥款' }}
                </button>
             </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
+
+    <!-- 新增成員 Modal -->
+    <Teleport to="body">
+      <Transition name="fade">
+        <div v-if="showAddMemberModal" class="fixed inset-0 z-[60] flex items-center justify-center px-4">
+          <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="closeAddMemberModal"></div>
+          <div class="bg-white w-full max-w-sm rounded-[28px] shadow-2xl p-6 relative z-10 space-y-6">
+            
+            <div class="text-center">
+              <h3 class="text-xl font-bold text-[#1B4588]">新增成員</h3>
+              <p class="text-xs text-[#a09888] mt-1">獨立記帳帳號</p>
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                   <label class="block text-[10px] font-bold text-[#a09888] uppercase tracking-[0.2em] mb-2">成員名稱</label>
+                   <input v-model="newMemberName" type="text" placeholder="輸入名稱 (例如: 小明)" 
+                          class="w-full bg-[#F0ECE6] border border-[#E8E2D8] rounded-2xl px-4 py-3 text-sm font-bold text-[#1B4588] focus:border-[#1B4588]/30 outline-none placeholder:text-[#c4baa8] transition-colors"
+                          @keyup.enter="submitNewMember">
+                </div>
+            </div>
+
+            <div class="flex gap-3">
+               <button @click="closeAddMemberModal" 
+                       class="flex-1 bg-[#F0ECE6] hover:bg-[#E8E2D8] text-[#a09888] font-bold py-3.5 rounded-full transition-colors">
+                  取消
+               </button>
+               <button @click="submitNewMember" :disabled="!newMemberName.trim() || isSubmittingMember" 
+                       class="flex-1 bg-[#1B4588] hover:bg-[#153a70] text-white font-bold py-3.5 rounded-full transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:scale-100 shadow-lg shadow-[#1B4588]/20">
+                  <PhSpinner v-if="isSubmittingMember" class="animate-spin" />
+                  <span v-else>確認新增</span>
+               </button>
+            </div>
 
           </div>
         </div>
       </Transition>
     </Teleport>
+
   </div>
 </template>
 
 <script setup>
 import { computed, ref } from 'vue';
-import { PhCaretLeft, PhArrowsLeftRight } from '@phosphor-icons/vue';
+import { PhCaretLeft, PhArrowsLeftRight, PhPlus, PhSpinner } from '@phosphor-icons/vue';
 
 const store = useBudgetStore();
 const selectedUser = ref(null);

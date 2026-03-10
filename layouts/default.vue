@@ -71,20 +71,16 @@
       <slot />
     </main>
     
-    <!-- FAB 快速記帳 -->
-    <TheInput v-if="store.currentUser" />
+    <!-- FAB 快速記帳 (已移除) -->
 
     <!-- 底部導覽列（品牌色） -->
     <div v-if="store.currentUser" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 w-[90%] max-w-[320px]">
       <nav class="bg-white/90 backdrop-blur-md border border-[#E8E2D8] rounded-full p-1.5 flex justify-between shadow-xl shadow-[#1B4588]/5">
         <NuxtLink to="/" class="nav-item" active-class="active">
-          專案
+          儀表板
         </NuxtLink>
         <NuxtLink to="/expense" class="nav-item" active-class="active">
           記帳
-        </NuxtLink>
-        <NuxtLink to="/funds" class="nav-item" active-class="active">
-          資金
         </NuxtLink>
         <NuxtLink to="/members" class="nav-item" active-class="active">
           成員
