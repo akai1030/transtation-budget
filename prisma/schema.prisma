@@ -13,6 +13,8 @@ model User {
   name         String        @unique
   pettyCash    Int           @default(0) // Current balance of the user
   transactions Transaction[] // Relation to Transaction
+  workLogs     WorkLog[]     @relation("WorkerLogs")
+  settledLogs  WorkLog[]     @relation("SettledBy")
 }
 
 model Project {
@@ -84,4 +86,31 @@ model Transaction {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  workLogs  WorkLog[]
+}
+
+model WorkLog {
+  id          String   @id @default(uuid())
+  userId      String?
+  user        User?    @relation("WorkerLogs", fields: [userId], references: [id])
+  targetName  String?  // 非系統預留人員的名字（例如工讀生）
+  date        DateTime @default(now())
+  hours       Float
+  hourlyRate  Int
+  amount      Int      // Calculated field (hours * hourlyRate)
+  description String?
+  
+  isSettled   Boolean  @default(false)
+  
+  // 結算時綁定的交易 (將此工資歸入公司支出或特定專案)
+  transactionId String?
+  transaction   Transaction? @relation(fields: [transactionId], references: [id])
+  
+  // 記錄誰操作了結算 (系統預留為操作者)
+  settledById String?
+  settledBy   User?    @relation("SettledBy", fields: [settledById], references: [id])
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }

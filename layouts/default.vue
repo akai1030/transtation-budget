@@ -29,8 +29,8 @@
     <!-- 啟動畫面 -->
     <SplashScreen :show="showSplash" />
 
-    <!-- 登入畫面 -->
-    <div v-if="!store.currentUser && !store.loading && !showSplash" class="fixed inset-0 z-50 flex items-center justify-center p-6 bg-[#F0ECE6]/80 backdrop-blur-md animate-fade-in">
+    <!-- 登入畫面 (身份切換) -->
+    <div v-if="!store.currentUser && !store.loading && !showSplash && !isPublicPage" class="fixed inset-0 z-50 flex items-center justify-center p-6 bg-[#F0ECE6]/80 backdrop-blur-md animate-fade-in">
       <div class="bg-white/90 backdrop-blur-xl border border-[#E8E2D8] p-8 rounded-[32px] shadow-2xl w-full max-w-sm">
         <!-- 品牌花形 -->
         <div class="w-16 h-16 mx-auto mb-5">
@@ -67,20 +67,22 @@
     </div>
 
     <!-- 主要內容 -->
-    <main class="relative z-10 pb-24" v-if="store.currentUser">
+    <!-- 若是公開頁，不需要選 currentUser 也能看；其餘頁面需要 currentUser -->
+    <main class="relative z-10 pb-24" v-if="store.currentUser || isPublicPage">
       <slot />
     </main>
     
-    <!-- FAB 快速記帳 (已移除) -->
-
     <!-- 底部導覽列（品牌色） -->
-    <div v-if="store.currentUser" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 w-[90%] max-w-[320px]">
+    <div v-if="store.currentUser && !isPublicPage" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 w-[95%] max-w-[400px]">
       <nav class="bg-white/90 backdrop-blur-md border border-[#E8E2D8] rounded-full p-1.5 flex justify-between shadow-xl shadow-[#1B4588]/5">
         <NuxtLink to="/" class="nav-item" active-class="active">
           儀表板
         </NuxtLink>
         <NuxtLink to="/expense" class="nav-item" active-class="active">
           記帳
+        </NuxtLink>
+        <NuxtLink to="/hr" class="nav-item" active-class="active">
+          人資
         </NuxtLink>
         <NuxtLink to="/members" class="nav-item" active-class="active">
           成員
@@ -91,9 +93,15 @@
 </template>
 
 <script setup>
+import { computed, ref, onMounted } from 'vue';
+import { useRoute } from 'vue-router';
 import { PhCaretRight, PhSpinner } from '@phosphor-icons/vue';
+import { useBudgetStore } from '~/stores/budget';
+
 const store = useBudgetStore();
 const showSplash = ref(true);
+const route = useRoute();
+const isPublicPage = computed(() => ['/login', '/punch'].includes(route.path));
 
 const handleLogin = (u) => {
     store.setUser(u);
