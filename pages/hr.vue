@@ -266,6 +266,29 @@
        </Transition>
     </Teleport>
 
+    <!-- 退回確認 Modal -->
+    <Teleport to="body">
+       <Transition name="modal">
+           <div v-if="isRevertModalOpen" class="fixed inset-0 z-[110] flex items-center justify-center p-4">
+              <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="closeRevertModal"></div>
+              <div class="bg-white rounded-[32px] w-full max-w-sm p-8 shadow-2xl relative z-10 text-center">
+                 <div class="w-16 h-16 bg-rose-50 rounded-full flex items-center justify-center mx-auto mb-4 text-rose-500">
+                     <PhArrowUUpLeft weight="bold" class="text-3xl" />
+                 </div>
+                 <h2 class="text-2xl font-bold text-[#1B4588] mb-2 tracking-tight">退回工時紀錄</h2>
+                 <p class="text-xs text-[#a09888] mb-8 leading-relaxed">確定要將此紀錄退回「待結算」狀態嗎？<br>退回後將會從目前的結算專案中移除。</p>
+
+                 <div class="flex gap-3">
+                    <button @click="closeRevertModal" class="flex-1 bg-[#F0ECE6] hover:bg-[#E8E2D8] text-[#a09888] font-bold py-3.5 rounded-full transition-colors">取消</button>
+                    <button @click="confirmRevertLog" :disabled="submitting" class="flex-1 bg-rose-500 hover:bg-rose-600 text-white font-bold py-3.5 rounded-full transition-colors flex items-center justify-center gap-2 disabled:opacity-50">
+                       確定退回
+                    </button>
+                 </div>
+              </div>
+           </div>
+       </Transition>
+    </Teleport>
+
   </div>
 </template>
 
@@ -467,16 +490,33 @@ const deleteLog = async (id) => {
     }
 };
 
-const revertLog = async (id) => {
-    if (!confirm('確定要將此紀錄退回「待結算」狀態嗎？\n(將會從已結算專案中移除)')) return;
+const isRevertModalOpen = ref(false);
+const revertTargetId = ref(null);
+
+const revertLog = (id) => {
+    revertTargetId.value = id;
+    isRevertModalOpen.value = true;
+};
+
+const closeRevertModal = () => {
+    isRevertModalOpen.value = false;
+    revertTargetId.value = null;
+};
+
+const confirmRevertLog = async () => {
+    if (!revertTargetId.value) return;
+    submitting.value = true;
     try {
         await $fetch('/api/hr/revert-log', {
             method: 'POST',
-            body: { id }
+            body: { id: revertTargetId.value }
         });
         await loadLogs();
+        closeRevertModal();
     } catch (e) {
         alert("退回失敗");
+    } finally {
+        submitting.value = false;
     }
 };
 
