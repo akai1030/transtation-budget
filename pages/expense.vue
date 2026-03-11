@@ -112,65 +112,68 @@
         </Transition>
       </div>
 
-      <!-- 2. 專案 & 子專案 (僅專案記帳顯示) -->
-      <Transition name="expand" mode="out-in">
-        <div v-if="entryType === 'project'" class="stagger-item bg-white rounded-[28px] p-5 shadow-sm border border-[#E8E2D8] relative overflow-hidden" style="--delay: 2">
-          <div class="text-[10px] font-bold text-[#a09888] uppercase tracking-[0.2em] mb-3">專案 / 子專案</div>
-          
-          <!-- 專案選擇 -->
-          <div class="relative mb-3">
-            <select v-model="selectedProjectId" 
-              class="w-full bg-[#F0ECE6] rounded-2xl py-3 px-4 text-sm font-bold appearance-none outline-none text-[#1B4588] border border-[#E8E2D8] focus:border-[#1B4588]/30 transition-colors">
-              <option value="" disabled>選擇專案...</option>
-              <option v-for="p in store.projects" :key="p.id" :value="p.id">{{ p.name }}</option>
-            </select>
-            <PhCaretDown class="absolute right-4 top-1/2 -translate-y-1/2 text-[#a09888] pointer-events-none text-sm" />
-          </div>
+      <!-- 2. 動態表單區塊 (專案 / 薪資對象) -->
+      <div class="stagger-item" style="--delay: 2">
+        <Transition name="fade" mode="out-in">
+          <!-- 專案 & 子專案 (僅專案記帳顯示) -->
+          <div v-if="entryType === 'project'" class="bg-white rounded-[28px] p-5 shadow-sm border border-[#E8E2D8] relative overflow-hidden">
+            <div class="text-[10px] font-bold text-[#a09888] uppercase tracking-[0.2em] mb-3">專案 / 子專案</div>
+            
+            <!-- 專案選擇 -->
+            <div class="relative mb-3">
+              <select v-model="selectedProjectId" 
+                class="w-full bg-[#F0ECE6] rounded-2xl py-3 px-4 text-sm font-bold appearance-none outline-none text-[#1B4588] border border-[#E8E2D8] focus:border-[#1B4588]/30 transition-colors">
+                <option value="" disabled>選擇專案...</option>
+                <option v-for="p in store.projects" :key="p.id" :value="p.id">{{ p.name }}</option>
+              </select>
+              <PhCaretDown class="absolute right-4 top-1/2 -translate-y-1/2 text-[#a09888] pointer-events-none text-sm" />
+            </div>
 
-          <!-- 子專案 pill -->
-          <div v-if="selectedProjectId && budgetLines.length > 0">
-            <div class="text-[10px] font-bold text-[#a09888] uppercase tracking-[0.2em] mb-1.5">預算分支</div>
-            <div class="flex flex-wrap gap-2">
-              <button v-for="line in budgetLines" :key="line.category"
-                @click="selectedBranch = line.category"
-                class="px-3.5 py-2 rounded-full text-xs font-bold transition-all border"
-                :class="selectedBranch === line.category 
-                  ? 'bg-[#1B4588] text-white border-[#1B4588] shadow-md shadow-[#1B4588]/15' 
-                  : 'bg-[#F0ECE6] border-[#E8E2D8] text-[#6b6050] hover:border-[#1B4588]/30'">
-                {{ line.category }}
-                <span class="ml-1 opacity-50 font-mono text-[10px]">
-                  {{ formatCompact(line.budget - line.used) }}
+            <!-- 子專案 pill -->
+            <div v-if="selectedProjectId && budgetLines.length > 0">
+              <div class="text-[10px] font-bold text-[#a09888] uppercase tracking-[0.2em] mb-1.5">預算分支</div>
+              <div class="flex flex-wrap gap-2">
+                <button v-for="line in budgetLines" :key="line.category"
+                  @click="selectedBranch = line.category"
+                  class="px-3.5 py-2 rounded-full text-xs font-bold transition-all border"
+                  :class="selectedBranch === line.category 
+                    ? 'bg-[#1B4588] text-white border-[#1B4588] shadow-md shadow-[#1B4588]/15' 
+                    : 'bg-[#F0ECE6] border-[#E8E2D8] text-[#6b6050] hover:border-[#1B4588]/30'">
+                  {{ line.category }}
+                  <span class="ml-1 opacity-50 font-mono text-[10px]">
+                    {{ formatCompact(line.budget - line.used) }}
+                  </span>
+                </button>
+              </div>
+              <!-- 剩餘預算 -->
+              <div v-if="selectedBranch && selectedBranchInfo" class="mt-2 text-[10px] font-mono px-1 flex justify-between">
+                <span class="text-[#a09888]">預算 ${{ formatNumber(selectedBranchInfo.budget) }}</span>
+                <span :class="branchRemaining < 0 ? 'text-crimson-alert font-bold' : 'text-[#1B4588]'">
+                  剩餘 ${{ formatNumber(branchRemaining) }}
                 </span>
-              </button>
+              </div>
             </div>
-            <!-- 剩餘預算 -->
-            <div v-if="selectedBranch && selectedBranchInfo" class="mt-2 text-[10px] font-mono px-1 flex justify-between">
-              <span class="text-[#a09888]">預算 ${{ formatNumber(selectedBranchInfo.budget) }}</span>
-              <span :class="branchRemaining < 0 ? 'text-crimson-alert font-bold' : 'text-[#1B4588]'">
-                剩餘 ${{ formatNumber(branchRemaining) }}
-              </span>
+
+            <div v-else-if="!selectedProjectId" class="text-xs text-[#b5aa9a] text-center py-3 font-medium">
+              請先選擇專案
             </div>
           </div>
 
-          <div v-else-if="!selectedProjectId" class="text-xs text-[#b5aa9a] text-center py-3 font-medium">
-            請先選擇專案
+          <!-- 發放薪水對象選擇 -->
+          <div v-else-if="entryType === 'payroll'" class="bg-white rounded-[28px] p-5 shadow-sm border border-[#E8E2D8] relative overflow-hidden">
+            <div class="text-[10px] font-bold text-[#a09888] uppercase tracking-[0.2em] mb-3">發放對象</div>
+            <div class="relative">
+              <select v-model="selectedPayee" 
+                class="w-full bg-[#F0ECE6] rounded-2xl py-3 px-4 text-sm font-bold appearance-none outline-none text-amber-700 border border-[#E8E2D8] focus:border-amber-600/30 transition-colors">
+                <option value="" disabled>選擇人員...</option>
+                <option v-for="u in store.users" :key="u.id" :value="u.name">{{ u.name }}</option>
+                <option value="其他外部人員">其他外部人員</option>
+              </select>
+              <PhCaretDown class="absolute right-4 top-1/2 -translate-y-1/2 text-[#a09888] pointer-events-none text-sm" />
+            </div>
           </div>
-        </div>
-
-        <!-- 發放薪水對象選擇 -->
-        <div v-else-if="entryType === 'payroll'" class="stagger-item bg-white rounded-[28px] p-5 shadow-sm border border-[#E8E2D8] relative overflow-hidden" style="--delay: 2">
-          <div class="text-[10px] font-bold text-[#a09888] uppercase tracking-[0.2em] mb-3">發放對象</div>
-          <div class="relative">
-            <select v-model="selectedPayee" 
-              class="w-full bg-[#F0ECE6] rounded-2xl py-3 px-4 text-sm font-bold appearance-none outline-none text-amber-700 border border-[#E8E2D8] focus:border-amber-600/30 transition-colors">
-              <option value="" disabled>選擇人員...</option>
-              <option v-for="u in store.users" :key="u.id" :value="u.name">{{ u.name }}</option>
-              <option value="其他外部人員">其他外部人員</option>
-            </select>
-            <PhCaretDown class="absolute right-4 top-1/2 -translate-y-1/2 text-[#a09888] pointer-events-none text-sm" />
-          </div>
-        </div>
-      </Transition>
+        </Transition>
+      </div>
 
       <!-- 3. 會計科目 -->
       <div class="stagger-item bg-white rounded-[28px] p-5 shadow-sm border border-[#E8E2D8] relative overflow-hidden" style="--delay: 3">
@@ -574,5 +577,15 @@ const submit = async () => {
   max-height: 0;
   opacity: 0;
   margin-top: 0;
+}
+
+/* ── 快速切換漸變 ── */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.15s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 </style>
