@@ -27,12 +27,17 @@
                <label class="block text-[10px] font-bold text-[#a09888] uppercase tracking-[0.2em] mb-2 pl-2">您的姓名 (必填)</label>
                <input 
                  v-model="form.name" 
+                 list="custom-targets"
                  type="text" 
                  required
+                 @input="handleNameInput"
                  @blur="fetchRecentLogs"
                  placeholder="例如：王大明" 
                  class="w-full border border-[#E8E2D8] focus:border-[#1B4588]/30 bg-[#F0ECE6] rounded-2xl px-5 py-4 text-lg font-bold text-[#1B4588] transition-colors outline-none placeholder:text-[#c4baa8]"
                >
+               <datalist id="custom-targets">
+                 <option v-for="name in customTargets" :key="name" :value="name"></option>
+               </datalist>
             </div>
 
             <!-- 時數 -->
@@ -109,7 +114,7 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue';
+import { ref, reactive, onMounted } from 'vue';
 import { PhPaperPlaneRight, PhSpinner, PhCheckCircle, PhTrash } from '@phosphor-icons/vue';
 
 // 隱藏的系統預設時薪
@@ -118,6 +123,7 @@ const DEFAULT_HOURLY_RATE = 200;
 const isLoading = ref(false);
 const isSuccess = ref(false);
 const recentLogs = ref([]);
+const customTargets = ref([]);
 
 const form = reactive({
     name: '',
@@ -126,16 +132,32 @@ const form = reactive({
     description: ''
 });
 
+const fetchCustomTargets = async () => {
+    try {
+        const data = await $fetch('/api/hr/get-custom-targets');
+        customTargets.value = data || [];
+    } catch (e) {
+        console.error("Failed to fetch custom targets", e);
+    }
+};
+
+const handleNameInput = () => {
+    // 當用戶在輸入時，如果是從建議清單選取的，觸發搜尋近期紀錄
+    if (customTargets.value.includes(form.name.trim())) {
+        fetchRecentLogs();
+    }
+};
+
 const fetchRecentLogs = async () => {
     if (!form.name.trim()) {
         recentLogs.value = [];
         return;
     }
     try {
-        const { data } = await useFetch('/api/hr/get-logs');
-        if (data.value) {
+        const data = await $fetch('/api/hr/get-logs');
+        if (data) {
             // 只過濾出符合姓名且尚未結算的紀錄
-            recentLogs.value = data.value.pending.filter(l => l.targetName === form.name.trim()).slice(0, 5);
+            recentLogs.value = (data.pending || []).filter(l => l.targetName === form.name.trim()).slice(0, 5);
         }
     } catch (e) {
         console.error("Failed to fetch logs", e);
@@ -159,6 +181,7 @@ const submitPunch = async () => {
         });
         isSuccess.value = true;
         await fetchRecentLogs();
+        await fetchCustomTargets(); // 更新建議清單
     } catch (e) {
         alert("登記失敗，請檢查網路連線或聯絡管理員。");
     } finally {
@@ -185,4 +208,8 @@ const resetForm = () => {
     form.date = new Date().toISOString().split('T')[0];
     isSuccess.value = false;
 };
+
+onMounted(() => {
+    fetchCustomTargets();
+});
 </script>

@@ -75,16 +75,21 @@
 
              <!-- 明細條目 -->
              <div class="space-y-3">
-                 <div v-for="log in personLogs.logs" :key="log.id" class="flex justify-between items-start text-sm">
-                    <div>
+                 <div v-for="log in personLogs.logs" :key="log.id" class="flex justify-between items-start text-sm group/item">
+                    <div class="flex-1 min-w-0">
                        <div class="flex items-center gap-2">
                           <span class="text-[#a09888] text-xs font-mono">{{ new Date(log.date).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit' }) }}</span>
-                          <span class="font-bold text-[#6b6050]">{{ log.description || '一般執行' }}</span>
+                          <span class="font-bold text-[#6b6050] truncate">{{ log.description || '一般執行' }}</span>
                        </div>
                     </div>
-                    <div class="text-right">
-                       <span class="font-mono font-bold text-[#b5aa9a] mr-2 text-xs">${{ log.hourlyRate }}/hr &times; {{ log.hours }}</span>
-                       <span class="font-mono font-bold text-[#6b6050]">${{ Math.round(log.amount).toLocaleString() }}</span>
+                    <div class="flex items-center gap-3">
+                       <div class="text-right">
+                          <span class="font-mono font-bold text-[#b5aa9a] mr-2 text-xs">${{ log.hourlyRate }}/hr &times; {{ log.hours }}</span>
+                          <span class="font-mono font-bold text-[#6b6050] font-xl">${{ Math.round(log.amount).toLocaleString() }}</span>
+                       </div>
+                       <button @click="deleteLog(log.id)" class="opacity-0 group-hover/item:opacity-100 p-1.5 text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all">
+                          <PhTrash weight="bold" />
+                       </button>
                     </div>
                  </div>
              </div>
@@ -256,7 +261,7 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue';
-import { PhPlus, PhSpinner, PhCoffee, PhCheckCircle } from '@phosphor-icons/vue';
+import { PhPlus, PhSpinner, PhCoffee, PhPaperPlaneRight, PhTrash, PhCheckCircle } from '@phosphor-icons/vue';
 import { useBudgetStore } from '~/stores/budget';
 import { useAuthStore } from '~/stores/auth';
 
