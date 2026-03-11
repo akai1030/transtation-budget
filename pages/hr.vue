@@ -153,7 +153,12 @@
                                <option v-for="u in store.users" :key="u.id" :value="u.id">{{ u.name }}</option>
                            </select>
                            
-                           <input v-else v-model="form.targetName" type="text" placeholder="輸入人員名稱" class="w-full bg-transparent border-b-2 border-white/20 px-1 py-2 text-xl font-bold text-white focus:border-white transition-colors outline-none placeholder:text-white/30">
+                           <template v-else>
+                               <input v-model="form.targetName" list="admin-custom-targets" type="text" placeholder="輸入人員名稱" class="w-full bg-transparent border-b-2 border-white/20 px-1 py-2 text-xl font-bold text-white focus:border-white transition-colors outline-none placeholder:text-white/30">
+                               <datalist id="admin-custom-targets">
+                                 <option v-for="name in customTargets" :key="name" :value="name"></option>
+                               </datalist>
+                           </template>
                        </div>
                    </div>
                </div>
@@ -270,11 +275,11 @@ const authStore = useAuthStore();
 const isLoading = ref(true);
 const submitting = ref(false);
 
-const activeTab = ref('pending');
-
 // Data
+const activeTab = ref('pending'); // 'pending' | 'settled'
 const pendingLogs = ref([]);
 const settledLogs = ref([]);
+const customTargets = ref([]); // 新增自訂象清單狀態
 
 // Modals
 const isCreateModalOpen = ref(false);
@@ -320,8 +325,18 @@ const loadLogs = async () => {
     }
 };
 
+const fetchCustomTargets = async () => {
+    try {
+        const data = await $fetch('/api/hr/get-custom-targets');
+        customTargets.value = data || [];
+    } catch (e) {
+        console.error("Failed to fetch custom targets", e);
+    }
+};
+
 onMounted(() => {
     loadLogs();
+    fetchCustomTargets();
 });
 
 // Group pending logs by person name
@@ -431,6 +446,19 @@ const submitCheckout = async () => {
         checkoutError.value = e.message || '結算失敗';
     } finally {
         submitting.value = false;
+    }
+};
+
+const deleteLog = async (id) => {
+    if (!confirm('確定要刪除這筆工時紀錄嗎？')) return;
+    try {
+        await $fetch('/api/hr/delete-log', {
+            method: 'POST',
+            body: { id }
+        });
+        await loadLogs();
+    } catch (e) {
+        alert("刪除失敗");
     }
 };
 
