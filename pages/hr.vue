@@ -114,9 +114,14 @@
                       <span>{{ log.hours }}h @ ${{ log.hourlyRate }}</span>
                   </div>
               </div>
-              <div class="text-right">
-                  <div class="font-mono font-bold text-[#1B4588]">${{ Math.round(log.amount).toLocaleString() }}</div>
-                  <div class="text-[10px] text-[#b5aa9a] mt-1">{{ log.description || '工時' }}</div>
+              <div class="text-right flex items-center gap-4">
+                  <div>
+                      <div class="font-mono font-bold text-[#1B4588]">${{ Math.round(log.amount).toLocaleString() }}</div>
+                      <div class="text-[10px] text-[#b5aa9a] mt-1">{{ log.description || '工時' }}</div>
+                  </div>
+                  <button @click="revertLog(log.id)" class="text-[#a09888] hover:text-[#1B4588] bg-[#F0ECE6] hover:bg-[#E8E2D8] p-2 rounded-xl transition-all shadow-sm" title="退回為未結算狀態">
+                      <PhArrowUUpLeft weight="bold" />
+                  </button>
               </div>
           </div>
       </div>
@@ -266,7 +271,7 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue';
-import { PhPlus, PhSpinner, PhCoffee, PhPaperPlaneRight, PhTrash, PhCheckCircle } from '@phosphor-icons/vue';
+import { PhPlus, PhSpinner, PhCoffee, PhPaperPlaneRight, PhTrash, PhCheckCircle, PhArrowUUpLeft } from '@phosphor-icons/vue';
 import { useBudgetStore } from '~/stores/budget';
 import { useAuthStore } from '~/stores/auth';
 
@@ -459,6 +464,19 @@ const deleteLog = async (id) => {
         await loadLogs();
     } catch (e) {
         alert("刪除失敗");
+    }
+};
+
+const revertLog = async (id) => {
+    if (!confirm('確定要將此紀錄退回「待結算」狀態嗎？\n(將會從已結算專案中移除)')) return;
+    try {
+        await $fetch('/api/hr/revert-log', {
+            method: 'POST',
+            body: { id }
+        });
+        await loadLogs();
+    } catch (e) {
+        alert("退回失敗");
     }
 };
 
