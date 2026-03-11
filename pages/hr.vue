@@ -16,13 +16,13 @@
     <div class="flex gap-2 mb-6 bg-white p-1 rounded-full shadow-sm border border-[#E8E2D8] w-fit">
        <button 
          @click="activeTab = 'pending'"
-         :class="['px-6 py-2.5 rounded-full text-sm font-bold transition-all', activeTab === 'pending' ? 'bg-[#1B4588] text-white' : 'text-[#a09888] hover:text-[#6b6050]']"
+         :class="['px-4 sm:px-6 py-2.5 rounded-full text-sm font-bold transition-all', activeTab === 'pending' ? 'bg-[#1B4588] text-white' : 'text-[#a09888] hover:text-[#6b6050]']"
        >
          待結算工時
        </button>
        <button 
          @click="activeTab = 'settled'"
-         :class="['px-6 py-2.5 rounded-full text-sm font-bold transition-all', activeTab === 'settled' ? 'bg-[#1B4588] text-white' : 'text-[#a09888] hover:text-[#6b6050]']"
+         :class="['px-4 sm:px-6 py-2.5 rounded-full text-sm font-bold transition-all', activeTab === 'settled' ? 'bg-[#1B4588] text-white' : 'text-[#a09888] hover:text-[#6b6050]']"
        >
          已結算歷史
        </button>

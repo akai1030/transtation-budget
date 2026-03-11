@@ -102,7 +102,7 @@
       <!-- 未收帳款 -->
       <div class="stagger-item col-span-1 sm:col-span-2 lg:col-span-3 bg-white rounded-[28px] p-6 shadow-sm border border-[#E8E2D8] relative group" style="--delay: 4">
         <div class="absolute top-3 right-3 w-2 h-2 rounded-full bg-[#1B4588] opacity-30"></div>
-        <div class="relative z-10 flex justify-between items-end">
+        <div class="relative z-10 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-3 sm:gap-0">
           <div>
               <div class="flex items-center gap-1.5 mb-1 relative group/tooltip">
                 <div class="text-[10px] font-bold text-[#a09888] uppercase tracking-[0.2em]">專案未收帳款總額</div>
@@ -115,7 +115,7 @@
                 ${{ formatNumber(store.totalPendingReceivables) }}
               </div>
           </div>
-          <div class="text-right">
+          <div class="text-left sm:text-right">
               <div class="text-[10px] text-[#b5aa9a] font-medium">
                  其中估計 ${{ formatCompact(store.totalPendingRetention) }} 將成為公司資產
               </div>
@@ -126,7 +126,7 @@
     </div>
 
     <!-- 收入 / 支出 雙欄 (從原資金頁面移入) -->
-    <div class="stagger-item grid grid-cols-2 gap-4 mt-6" style="--delay: 4.5">
+    <div class="stagger-item grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6" style="--delay: 4.5">
         <!-- 收入 -->
         <div class="bg-white p-5 pb-4 rounded-[28px] border border-[#E8E2D8] relative group">
              <div class="absolute top-3 right-3 w-2 h-2 rounded-full bg-emerald-400 opacity-40"></div>
