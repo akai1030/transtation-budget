@@ -1,18 +1,23 @@
 import { useAuthStore } from '~/stores/auth';
 
-export default defineNuxtRouteMiddleware((to, from) => {
+export default defineNuxtRouteMiddleware(async (to) => {
     const authStore = useAuthStore()
+    const { loggedIn, fetch: fetchSession } = useUserSession()
 
     // Public routes that don't require login
     const publicRoutes = ['/login', '/punch']
-
-    // 如果使用者沒有登入而且想去的頁面不在 publicRoutes 裡面，就強制導向 /login
-    if (!authStore.isLoggedIn && !publicRoutes.includes(to.path)) {
-        return navigateTo('/login')
+    if (publicRoutes.includes(to.path)) {
+        if (loggedIn.value && to.path === '/login') return navigateTo('/')
+        return
     }
 
-    // 如果使用者已經登入而且想去 /login，就強制導向首頁
-    if (authStore.isLoggedIn && to.path === '/login') {
-        return navigateTo('/')
+    // Sync session from server if not yet loaded in Pinia
+    if (!authStore.isLoggedIn) {
+        await fetchSession()
+        if (loggedIn.value) {
+            authStore.loginSuccess()
+        } else {
+            return navigateTo('/login')
+        }
     }
 })

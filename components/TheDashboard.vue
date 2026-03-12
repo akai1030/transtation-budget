@@ -230,8 +230,11 @@
 <script setup>
 import { computed, ref } from 'vue';
 import { PhCoffee, PhCheckCircle, PhArrowUUpLeft, PhCaretDown, PhUserSwitch, PhInfo } from '@phosphor-icons/vue';
+import { useAuthStore } from '~/stores/auth';
 
 const store = useBudgetStore();
+const authStore = useAuthStore();
+const { clear: clearSession } = useUserSession();
 
 // === 原資金頁的統計邏輯 (修正版) ===
 const retentionIncome = computed(() => {
@@ -275,9 +278,12 @@ const switchUser = async (u) => {
     await store.loadData(true);
 };
 
-const logout = () => {
+const logout = async () => {
     store.logout();
+    authStore.logout();
+    await clearSession();
     showUserMenu.value = false;
+    await navigateTo('/login');
 };
 
 const openDetail = (tx) => {

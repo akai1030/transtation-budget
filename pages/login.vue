@@ -81,14 +81,23 @@ const generateButtons = () => {
 const handleButtonClick = async (char) => {
     error.value = '';
     const nextExpectedIndex = inputSequence.value.length;
-    
+
     if (char === TARGET_SEQUENCE[nextExpectedIndex]) {
         inputSequence.value.push(char);
-        
+
         if (inputSequence.value.length === TARGET_SEQUENCE.length) {
-            // 成功登入
-            authStore.loginSuccess();
-            await navigateTo('/');
+            try {
+                await $fetch('/api/auth/login', {
+                    method: 'POST',
+                    body: { sequence: inputSequence.value.join('') }
+                });
+                authStore.loginSuccess();
+                await navigateTo('/');
+            } catch {
+                error.value = '驗證失敗，請重試';
+                inputSequence.value = [];
+                generateButtons();
+            }
         } else {
             // 正確但還沒完，重新洗牌
             generateButtons();

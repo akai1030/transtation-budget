@@ -87,6 +87,9 @@
                           <span class="font-mono font-bold text-[#b5aa9a] mr-2 text-xs">${{ log.hourlyRate }}/hr &times; {{ log.hours }}</span>
                           <span class="font-mono font-bold text-[#6b6050] font-xl">${{ Math.round(log.amount).toLocaleString() }}</span>
                        </div>
+                       <button @click="openEditModal(log)" class="opacity-0 group-hover/item:opacity-100 p-1.5 text-[#a09888] hover:text-[#1B4588] hover:bg-[#F0ECE6] rounded-lg transition-all">
+                          <PhPencilSimple weight="bold" />
+                       </button>
                        <button @click="deleteLog(log.id)" class="opacity-0 group-hover/item:opacity-100 p-1.5 text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all">
                           <PhTrash weight="bold" />
                        </button>
@@ -230,34 +233,26 @@
               <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="closeCheckoutModal"></div>
               <div class="bg-white rounded-[32px] w-full max-w-md p-8 shadow-2xl relative z-10 flex flex-col max-h-[90vh]">
                  <h2 class="text-2xl font-bold text-[#1B4588] mb-2 text-center tracking-tight">工時結算</h2>
-                 <p class="text-xs text-[#a09888] text-center mb-6">需輸入管理員密碼以授權付款</p>
 
                  <div class="bg-rose-50 rounded-2xl p-4 mb-6 border border-rose-100 text-center">
                     <p class="text-[10px] font-bold text-rose-400 uppercase tracking-[0.2em] mb-1">本次總結算金額</p>
                     <p class="text-3xl font-mono font-bold text-rose-500">${{ Math.round(totalPendingAmount).toLocaleString() }}</p>
                  </div>
 
-                 <div class="space-y-5 overflow-y-auto flex-1 pb-4">
-                    <!-- 扣帳專案選擇 -->
-                    <div>
-                        <label class="block text-[10px] font-bold text-[#a09888] uppercase tracking-[0.2em] mb-2">扣帳專案 (必填)</label>
-                        <select v-model="checkoutForm.projectId" class="w-full bg-[#F0ECE6] border border-[#E8E2D8] rounded-2xl px-4 py-3.5 text-sm font-bold text-[#1B4588] outline-none cursor-pointer">
-                            <option value="">(無專案) 以公司營運支出扣帳</option>
-                            <option v-for="p in store.projects" :key="p.id" :value="p.id">{{ p.name }}</option>
-                        </select>
-                    </div>
-
-                    <!-- 密碼驗證 -->
-                    <div>
-                       <label class="block text-[10px] font-bold text-[#a09888] uppercase tracking-[0.2em] mb-2">管理授權密碼</label>
-                       <input v-model="checkoutForm.password" type="password" placeholder="請輸入密碼" class="w-full bg-[#F0ECE6] border border-[#E8E2D8] rounded-2xl px-4 py-3.5 text-center text-lg font-mono font-bold text-[#1B4588] focus:border-[#1B4588]/30 outline-none placeholder:text-[#c4baa8] tracking-widest">
-                       <p v-if="checkoutError" class="text-red-500 text-xs font-bold mt-2 text-center">{{ checkoutError }}</p>
-                    </div>
+                 <!-- 扣帳專案選擇 -->
+                 <div class="mb-6">
+                    <label class="block text-[10px] font-bold text-[#a09888] uppercase tracking-[0.2em] mb-2">扣帳專案</label>
+                    <select v-model="checkoutForm.projectId" class="w-full bg-[#F0ECE6] border border-[#E8E2D8] rounded-2xl px-4 py-3.5 text-sm font-bold text-[#1B4588] outline-none cursor-pointer">
+                        <option value="">(無專案) 以公司營運支出扣帳</option>
+                        <option v-for="p in store.projects" :key="p.id" :value="p.id">{{ p.name }}</option>
+                    </select>
                  </div>
 
-                 <div class="flex gap-3 mt-6">
+                 <p v-if="checkoutError" class="text-red-500 text-xs font-bold mb-3 text-center">{{ checkoutError }}</p>
+
+                 <div class="flex gap-3">
                     <button @click="closeCheckoutModal" class="flex-1 bg-[#F0ECE6] hover:bg-[#E8E2D8] text-[#a09888] font-bold py-4 rounded-full transition-colors">取消</button>
-                    <button @click="submitCheckout" :disabled="!checkoutForm.password || submitting" class="flex-[2] bg-rose-500 hover:bg-rose-600 text-white font-bold py-4 rounded-full transition-colors flex items-center justify-center gap-2 disabled:opacity-50 active:scale-95 shadow-lg shadow-rose-500/20">
+                    <button @click="submitCheckout" :disabled="submitting" class="flex-[2] bg-rose-500 hover:bg-rose-600 text-white font-bold py-4 rounded-full transition-colors flex items-center justify-center gap-2 disabled:opacity-50 active:scale-95 shadow-lg shadow-rose-500/20">
                        <PhCheckCircle weight="bold" class="text-xl" /> <span>確認結算付帳</span>
                     </button>
                  </div>
@@ -266,35 +261,61 @@
        </Transition>
     </Teleport>
 
-    <!-- 退回確認 Modal -->
+    <!-- 編輯工時 Modal -->
     <Teleport to="body">
-       <Transition name="modal">
-           <div v-if="isRevertModalOpen" class="fixed inset-0 z-[110] flex items-center justify-center p-4">
-              <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="closeRevertModal"></div>
-              <div class="bg-white rounded-[32px] w-full max-w-sm p-8 shadow-2xl relative z-10 text-center">
-                 <div class="w-16 h-16 bg-rose-50 rounded-full flex items-center justify-center mx-auto mb-4 text-rose-500">
-                     <PhArrowUUpLeft weight="bold" class="text-3xl" />
-                 </div>
-                 <h2 class="text-2xl font-bold text-[#1B4588] mb-2 tracking-tight">退回工時紀錄</h2>
-                 <p class="text-xs text-[#a09888] mb-8 leading-relaxed">確定要將此紀錄退回「待結算」狀態嗎？<br>退回後將會從目前的結算專案中移除。</p>
-
-                 <div class="flex gap-3">
-                    <button @click="closeRevertModal" class="flex-1 bg-[#F0ECE6] hover:bg-[#E8E2D8] text-[#a09888] font-bold py-3.5 rounded-full transition-colors">取消</button>
-                    <button @click="confirmRevertLog" :disabled="submitting" class="flex-1 bg-rose-500 hover:bg-rose-600 text-white font-bold py-3.5 rounded-full transition-colors flex items-center justify-center gap-2 disabled:opacity-50">
-                       確定退回
-                    </button>
-                 </div>
+      <Transition name="modal">
+        <div v-if="isEditModalOpen" class="fixed inset-0 z-[110] flex items-center justify-center p-4">
+          <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="closeEditModal"></div>
+          <div class="bg-white rounded-[32px] w-full max-w-sm p-8 shadow-2xl relative z-10">
+            <h2 class="text-xl font-bold text-[#1B4588] mb-6 tracking-tight">編輯工時紀錄</h2>
+            <div class="space-y-4">
+              <div>
+                <label class="block text-[10px] font-bold text-[#a09888] uppercase tracking-[0.2em] mb-2">人員名稱</label>
+                <input v-model="editForm.targetName" type="text" class="w-full bg-[#F0ECE6] border border-[#E8E2D8] rounded-2xl px-4 py-3 text-sm font-bold text-[#1B4588] outline-none focus:border-[#1B4588]/30">
               </div>
-           </div>
-       </Transition>
+              <div>
+                <label class="block text-[10px] font-bold text-[#a09888] uppercase tracking-[0.2em] mb-2">時數</label>
+                <input v-model="editForm.hours" type="number" step="0.5" min="0.5" class="w-full bg-[#F0ECE6] border border-[#E8E2D8] rounded-2xl px-4 py-3 text-sm font-bold text-[#1B4588] outline-none focus:border-[#1B4588]/30 font-mono">
+              </div>
+              <div>
+                <label class="block text-[10px] font-bold text-[#a09888] uppercase tracking-[0.2em] mb-2">日期</label>
+                <input v-model="editForm.date" type="date" class="w-full bg-[#F0ECE6] border border-[#E8E2D8] rounded-2xl px-4 py-3 text-sm font-bold text-[#1B4588] outline-none focus:border-[#1B4588]/30">
+              </div>
+              <div>
+                <label class="block text-[10px] font-bold text-[#a09888] uppercase tracking-[0.2em] mb-2">工作內容</label>
+                <input v-model="editForm.description" type="text" placeholder="進場佈置 / 拍攝紀錄 等" class="w-full bg-[#F0ECE6] border border-[#E8E2D8] rounded-2xl px-4 py-3 text-sm font-bold text-[#1B4588] outline-none focus:border-[#1B4588]/30">
+              </div>
+            </div>
+            <div class="flex gap-3 mt-6">
+              <button @click="closeEditModal" class="flex-1 bg-[#F0ECE6] hover:bg-[#E8E2D8] text-[#a09888] font-bold py-3.5 rounded-full transition-colors">取消</button>
+              <button @click="submitEdit" :disabled="submitting" class="flex-1 bg-[#1B4588] hover:bg-[#153a70] text-white font-bold py-3.5 rounded-full transition-colors disabled:opacity-50">儲存</button>
+            </div>
+          </div>
+        </div>
+      </Transition>
     </Teleport>
+
+    <!-- 退回確認 Modal -->
+    <ConfirmModal
+      :open="isRevertModalOpen"
+      title="退回工時紀錄"
+      message="確定要將此紀錄退回「待結算」狀態嗎？<br>退回後將會從目前的結算專案中移除。"
+      confirm-text="確定退回"
+      :loading="submitting"
+      @confirm="confirmRevertLog"
+      @cancel="closeRevertModal"
+    >
+      <template #icon>
+        <PhArrowUUpLeft weight="bold" class="text-3xl" />
+      </template>
+    </ConfirmModal>
 
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue';
-import { PhPlus, PhSpinner, PhCoffee, PhPaperPlaneRight, PhTrash, PhCheckCircle, PhArrowUUpLeft } from '@phosphor-icons/vue';
+import { PhPlus, PhSpinner, PhCoffee, PhPaperPlaneRight, PhTrash, PhCheckCircle, PhArrowUUpLeft, PhPencilSimple } from '@phosphor-icons/vue';
 import { useBudgetStore } from '~/stores/budget';
 import { useAuthStore } from '~/stores/auth';
 
@@ -333,7 +354,6 @@ const isCreateValid = computed(() => {
 });
 
 const checkoutForm = reactive({
-    password: '',
     projectId: ''
 });
 const checkoutError = ref('');
@@ -434,7 +454,6 @@ const submitWorkLog = async () => {
 };
 
 const openCheckoutModal = () => {
-    checkoutForm.password = '';
     checkoutForm.projectId = '';
     checkoutError.value = '';
     isCheckoutModalOpen.value = true;
@@ -445,11 +464,6 @@ const closeCheckoutModal = () => {
 };
 
 const submitCheckout = async () => {
-    // 驗證密碼
-    if (checkoutForm.password !== 'nttudpca2022') {
-        checkoutError.value = '密碼錯誤，請重新輸入';
-        return;
-    }
     checkoutError.value = '';
     submitting.value = true;
     
@@ -490,6 +504,49 @@ const deleteLog = async (id) => {
     }
 };
 
+// ── Edit modal ──
+const isEditModalOpen = ref(false);
+const editTargetId = ref(null);
+const editForm = reactive({ targetName: '', hours: '', date: '', description: '' });
+
+const openEditModal = (log) => {
+    editTargetId.value = log.id;
+    editForm.targetName = log.targetName || '';
+    editForm.hours = log.hours;
+    editForm.date = new Date(log.date).toISOString().split('T')[0];
+    editForm.description = log.description || '';
+    isEditModalOpen.value = true;
+};
+
+const closeEditModal = () => {
+    isEditModalOpen.value = false;
+    editTargetId.value = null;
+};
+
+const submitEdit = async () => {
+    if (!editTargetId.value) return;
+    submitting.value = true;
+    try {
+        await $fetch('/api/hr/update-log', {
+            method: 'PUT',
+            body: {
+                id: editTargetId.value,
+                hours: Number(editForm.hours),
+                date: editForm.date,
+                description: editForm.description,
+                targetName: editForm.targetName,
+            }
+        });
+        await loadLogs();
+        closeEditModal();
+    } catch (e) {
+        alert('儲存失敗');
+    } finally {
+        submitting.value = false;
+    }
+};
+
+// ── Revert modal ──
 const isRevertModalOpen = ref(false);
 const revertTargetId = ref(null);
 
@@ -507,11 +564,12 @@ const confirmRevertLog = async () => {
     if (!revertTargetId.value) return;
     submitting.value = true;
     try {
-        await $fetch('/api/hr/revert-log', {
+        const updated = await $fetch('/api/hr/revert-log', {
             method: 'POST',
             body: { id: revertTargetId.value }
         });
-        await loadLogs();
+        settledLogs.value = settledLogs.value.filter(l => l.id !== revertTargetId.value);
+        pendingLogs.value.unshift(updated);
         closeRevertModal();
     } catch (e) {
         alert("退回失敗");

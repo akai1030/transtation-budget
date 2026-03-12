@@ -115,6 +115,12 @@ model WorkLog {
   updatedAt   DateTime @updatedAt
 }
 
+model PunchIdentity {
+  name      String   @id
+  pinHash   String
+  createdAt DateTime @default(now())
+}
+
 model CommonItem {
   id        String   @id @default(cuid())
   label     String
