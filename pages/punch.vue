@@ -25,6 +25,7 @@
             <datalist id="name-list">
               <option v-for="n in customTargets" :key="n" :value="n"></option>
             </datalist>
+            <p v-if="nameError" class="text-rose-500 text-xs font-bold text-center mb-3">{{ nameError }}</p>
             <button
               @click="proceedFromName"
               :disabled="!nameInput.trim() || isChecking"
@@ -178,6 +179,7 @@ const pinError = ref('');
 const pinSetStage = ref('first'); // 'first' | 'confirm'
 const firstPin = ref('');
 const isChecking = ref(false);
+const nameError = ref('');
 const isLoading = ref(false);
 const isLoadingLogs = ref(false);
 const isSuccess = ref(false);
@@ -213,6 +215,7 @@ const proceedFromName = async () => {
     const name = nameInput.value.trim();
     if (!name) return;
     isChecking.value = true;
+    nameError.value = '';
     try {
         const { exists } = await $fetch('/api/hr/punch-check', { query: { name } });
         myName.value = name;
@@ -226,6 +229,7 @@ const proceedFromName = async () => {
         }
     } catch (e) {
         console.error(e);
+        nameError.value = '連線失敗，請稍後再試';
     } finally {
         isChecking.value = false;
     }
