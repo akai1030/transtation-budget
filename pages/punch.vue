@@ -12,19 +12,41 @@
             <p class="text-[#8c8273]">請先告訴我們你是誰</p>
           </div>
           <div class="bg-white rounded-[32px] p-8 shadow-sm border border-[#E8E2D8]">
-            <label class="block text-[10px] font-bold text-[#a09888] uppercase tracking-[0.2em] mb-3 pl-1">你的名字</label>
-            <input
-              v-model="nameInput"
-              list="name-list"
-              type="text"
-              placeholder="例如：王大明"
-              autofocus
-              @keyup.enter="proceedFromName"
-              class="w-full border border-[#E8E2D8] focus:border-[#1B4588]/30 bg-[#F0ECE6] rounded-2xl px-5 py-4 text-lg font-bold text-[#1B4588] transition-colors outline-none placeholder:text-[#c4baa8] mb-4"
-            >
-            <datalist id="name-list">
-              <option v-for="n in customTargets" :key="n" :value="n"></option>
-            </datalist>
+
+            <!-- 下拉選單（有舊紀錄時顯示） -->
+            <div v-if="customTargets.length > 0" class="mb-5">
+              <label class="block text-[10px] font-bold text-[#a09888] uppercase tracking-[0.2em] mb-3 pl-1">選擇我的名字</label>
+              <div class="relative">
+                <select
+                  v-model="nameInput"
+                  class="w-full bg-[#F0ECE6] border border-[#E8E2D8] focus:border-[#1B4588]/30 rounded-2xl px-5 py-4 text-lg font-bold text-[#1B4588] appearance-none outline-none cursor-pointer"
+                >
+                  <option value="" disabled>— 從清單選擇 —</option>
+                  <option v-for="n in customTargets" :key="n" :value="n">{{ n }}</option>
+                </select>
+                <PhCaretDown class="absolute right-5 top-1/2 -translate-y-1/2 text-[#a09888] pointer-events-none" />
+              </div>
+            </div>
+
+            <!-- 分隔線 -->
+            <div v-if="customTargets.length > 0" class="flex items-center gap-3 mb-5">
+              <div class="flex-1 h-px bg-[#E8E2D8]"></div>
+              <span class="text-[10px] font-bold text-[#c4baa8] uppercase tracking-widest">或</span>
+              <div class="flex-1 h-px bg-[#E8E2D8]"></div>
+            </div>
+
+            <!-- 文字輸入（新名字） -->
+            <div class="mb-5">
+              <label class="block text-[10px] font-bold text-[#a09888] uppercase tracking-[0.2em] mb-3 pl-1">{{ customTargets.length > 0 ? '輸入新名字' : '你的名字' }}</label>
+              <input
+                v-model="nameInput"
+                type="text"
+                :placeholder="customTargets.length > 0 ? '第一次使用？輸入你的名字' : '例如：王大明'"
+                @keyup.enter="proceedFromName"
+                class="w-full border border-[#E8E2D8] focus:border-[#1B4588]/30 bg-[#F0ECE6] rounded-2xl px-5 py-4 text-lg font-bold text-[#1B4588] transition-colors outline-none placeholder:text-[#c4baa8]"
+              >
+            </div>
+
             <p v-if="nameError" class="text-rose-500 text-xs font-bold text-center mb-3">{{ nameError }}</p>
             <button
               @click="proceedFromName"
@@ -168,7 +190,7 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue';
-import { PhPaperPlaneRight, PhSpinner, PhCheckCircle, PhTrash } from '@phosphor-icons/vue';
+import { PhPaperPlaneRight, PhSpinner, PhCheckCircle, PhTrash, PhCaretDown } from '@phosphor-icons/vue';
 
 const DEFAULT_HOURLY_RATE = 200;
 
