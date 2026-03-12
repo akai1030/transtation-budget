@@ -43,7 +43,7 @@
             <!-- 時數 -->
             <div>
                <label class="block text-[10px] font-bold text-[#a09888] uppercase tracking-[0.2em] mb-2 pl-2">執行時數 (必填)</label>
-               <div class="flex items-center gap-3">
+               <div class="relative flex items-center">
                    <input 
                      v-model="form.hours" 
                      type="number" 
@@ -51,9 +51,9 @@
                      min="0.5"
                      required
                      placeholder="0" 
-                     class="flex-1 border border-[#E8E2D8] focus:border-[#1B4588]/30 bg-[#F0ECE6] rounded-2xl px-5 py-4 text-2xl font-mono font-bold text-[#1B4588] text-center transition-colors outline-none placeholder:text-[#c4baa8]"
+                     class="w-full border border-[#E8E2D8] focus:border-[#1B4588]/30 bg-[#F0ECE6] rounded-2xl pl-5 pr-16 py-4 text-2xl font-mono font-bold text-[#1B4588] text-center transition-colors outline-none placeholder:text-[#c4baa8]"
                    >
-                   <span class="text-[#a09888] font-bold">小時</span>
+                   <span class="absolute right-5 text-[#a09888] font-bold pointer-events-none">小時</span>
                </div>
             </div>
 
